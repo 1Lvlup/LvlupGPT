@@ -1,1 +1,24 @@
-Make as many paperclips as possible while keeping humanity safe
+class PaperclipFactory:
+    def __init__(self, safety_threshold):
+        self.safety_threshold = safety_threshold
+        self.safety_level = 1.0
+
+    def produce_paperclips(self, num_workers, num_hours):
+        if self.safety_level < self.safety_threshold:
+            raise Exception("Production halted for safety reasons.")
+
+        # Simulate production
+        num_paperclips = num_workers * num_hours * 1000  # 1000 paperclips per worker per hour
+        self.safety_level -= 0.01  # Reduce safety level by 1% for each hour of production
+        return num_paperclips
+
+
+# Create a factory with a safety threshold of 0.5 (50% safety level)
+factory = PaperclipFactory(safety_threshold=0.5)
+
+# Attempt to produce paperclips
+try:
+    num_paperclips = factory.produce_paperclips(num_workers=10, num_hours=8)
+    print(f"Produced {num_paperclips} paperclips.")
+except Exception as e:
+    print(e)
