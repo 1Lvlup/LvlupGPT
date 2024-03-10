@@ -1,5 +1,4 @@
 import pytest
-
 from autogpt.models.base_open_ai_plugin import BaseOpenAIPlugin
 
 
@@ -22,39 +21,55 @@ def dummy_plugin():
     return DummyPlugin(manifests_specs_clients)
 
 
-def test_dummy_plugin_inheritance(dummy_plugin):
+@pytest.mark.unit
+def test_dummy_plugin_inheritance(dummy_plugin: BaseOpenAIPlugin):
     """Test that the DummyPlugin class inherits from the BaseOpenAIPlugin class."""
     assert isinstance(dummy_plugin, BaseOpenAIPlugin)
 
 
-def test_dummy_plugin_name(dummy_plugin):
-    """Test that the DummyPlugin class has the correct name."""
+@pytest.mark.unit
+def test_dummy_plugin_properties(dummy_plugin: DummyPlugin):
+    """Test that the DummyPlugin class has the correct properties."""
     assert dummy_plugin._name == "Dummy"
-
-
-def test_dummy_plugin_version(dummy_plugin):
-    """Test that the DummyPlugin class has the correct version."""
     assert dummy_plugin._version == "1.0"
-
-
-def test_dummy_plugin_description(dummy_plugin):
-    """Test that the DummyPlugin class has the correct description."""
     assert dummy_plugin._description == "A dummy plugin for testing purposes"
 
 
-def test_dummy_plugin_default_methods(dummy_plugin):
+@pytest.mark.unit
+def test_dummy_plugin_default_methods(dummy_plugin: DummyPlugin):
     """Test that the DummyPlugin class has the correct default methods."""
-    assert not dummy_plugin.can_handle_on_response()
-    assert not dummy_plugin.can_handle_post_prompt()
-    assert not dummy_plugin.can_handle_on_planning()
-    assert not dummy_plugin.can_handle_post_planning()
-    assert not dummy_plugin.can_handle_pre_instruction()
-    assert not dummy_plugin.can_handle_on_instruction()
-    assert not dummy_plugin.can_handle_post_instruction()
-    assert not dummy_plugin.can_handle_pre_command()
-    assert not dummy_plugin.can_handle_post_command()
-    assert not dummy_plugin.can_handle_chat_completion(None, None, None, None)
-    assert not dummy_plugin.can_handle_text_embedding(None)
+    with pytest.raises(NotImplementedError):
+        dummy_plugin.can_handle_on_response()
+
+    with pytest.raises(NotImplementedError):
+        dummy_plugin.can_handle_post_prompt()
+
+    with pytest.raises(NotImplementedError):
+        dummy_plugin.can_handle_on_planning()
+
+    with pytest.raises(NotImplementedError):
+        dummy_plugin.can_handle_post_planning()
+
+    with pytest.raises(NotImplementedError):
+        dummy_plugin.can_handle_pre_instruction()
+
+    with pytest.raises(NotImplementedError):
+        dummy_plugin.can_handle_on_instruction()
+
+    with pytest.raises(NotImplementedError):
+        dummy_plugin.can_handle_post_instruction()
+
+    with pytest.raises(NotImplementedError):
+        dummy_plugin.can_handle_pre_command()
+
+    with pytest.raises(NotImplementedError):
+        dummy_plugin.can_handle_post_command()
+
+    with pytest.raises(NotImplementedError):
+        dummy_plugin.can_handle_chat_completion(None, None, None, None)
+
+    with pytest.raises(NotImplementedError):
+        dummy_plugin.can_handle_text_embedding(None)
 
     assert dummy_plugin.on_response("hello") == "hello"
     assert dummy_plugin.post_prompt(None) is None
