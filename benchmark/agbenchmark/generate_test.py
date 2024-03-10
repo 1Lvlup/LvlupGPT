@@ -8,19 +8,22 @@ classes in the module that conform to the `Test*` pattern are collected.
 import importlib
 import logging
 from itertools import chain
+from typing import List, Dict
 
 from agbenchmark.challenges.builtin import load_builtin_challenges
 from agbenchmark.challenges.webarena import load_webarena_challenges
 
 logger = logging.getLogger(__name__)
 
-DATA_CATEGORY = {}
+DATA_CATEGORY: Dict[str, str] = {}
 
-# Load challenges and attach them to this module
-for challenge in chain(load_builtin_challenges(), load_webarena_challenges()):
-    # Attach the Challenge class to this module so it can be discovered by pytest
-    module = importlib.import_module(__name__)
-    setattr(module, challenge.__name__, challenge)
+def load_challenges() -> List[object]:
+    """Load all challenges and return them as a list of classes."""
+    challenges = chain(load_builtin_challenges(), load_webarena_challenges())
+    for challenge in challenges:
+        module = importlib.import_module(__name__)
+        setattr(module, challenge.__name__, challenge)
+        DATA_CATEGORY[challenge.info.name] = challenge.info.category[0].value
+    return list(challenges)
 
-    # Build a map of challenge names and their primary category
-    DATA_CATEGORY[challenge.info.name] = challenge.info.category[0].value
+load_challenges()
