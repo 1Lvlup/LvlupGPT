@@ -6,11 +6,18 @@ import shutil
 import threading
 import time
 from pathlib import Path
-from typing import Generator
+from typing import Generator, List, Tuple, Type, Union
 
 import pytest
+from _pytest.config import Config
+from _pytest.fixtures import FixtureRequest
+from _pytest.mark import Mark
+from _pytest.nodes import Item
+from _pytest.python import Function
+from _pytest.terminal import TerminalReporter
 
-from agbenchmark.challenges import OPTIONAL_CATEGORIES, BaseChallenge
+import pytest_timeout
+from agbenchmark.challenges import BaseChallenge, Category, OPTIONAL_CATEGORIES
 from agbenchmark.config import AgentBenchmarkConfig
 from agbenchmark.reports.processing.report_types import Test
 from agbenchmark.reports.ReportManager import RegressionTestsTracker
@@ -19,11 +26,9 @@ from agbenchmark.reports.reports import (
     make_empty_test_report,
     session_finish,
 )
-from agbenchmark.utils.data_types import Category
+from agbenchmark.utils.data_types import ChallengeInfo
 
-GLOBAL_TIMEOUT = (
-    1500  # The tests will stop after 25 minutes so we can send the reports.
-)
+GLOBAL_TIMEOUT = 1500  # The tests will stop after 25 minutes so we can send the reports.
 
 agbenchmark_config = AgentBenchmarkConfig.load()
 logger = logging.getLogger(__name__)
@@ -32,37 +37,7 @@ pytest_plugins = ["agbenchmark.utils.dependencies"]
 collect_ignore = ["challenges"]
 
 
-@pytest.fixture(scope="module")
-def config() -> AgentBenchmarkConfig:
-    return agbenchmark_config
-
-
-@pytest.fixture(autouse=True)
-def temp_folder() -> Generator[Path, None, None]:
-    """
-    Pytest fixture that sets up and tears down the temporary folder for each test.
-    It is automatically used in every test due to the 'autouse=True' parameter.
-    """
-
-    # create output directory if it doesn't exist
-    if not os.path.exists(agbenchmark_config.temp_folder):
-        os.makedirs(agbenchmark_config.temp_folder, exist_ok=True)
-
-    yield agbenchmark_config.temp_folder
-    # teardown after test function completes
-    if not os.getenv("KEEP_TEMP_FOLDER_FILES"):
-        for filename in os.listdir(agbenchmark_config.temp_folder):
-            file_path = os.path.join(agbenchmark_config.temp_folder, filename)
-            try:
-                if os.path.isfile(file_path) or os.path.islink(file_path):
-                    os.unlink(file_path)
-                elif os.path.isdir(file_path):
-                    shutil.rmtree(file_path)
-            except Exception as e:
-                logger.warning(f"Failed to delete {file_path}. Reason: {e}")
-
-
-def pytest_addoption(parser: pytest.Parser) -> None:
+def pytest_addoption(parser: Config) -> None:
     """
     Pytest hook that adds command-line options to the `pytest` command.
     The added options are specific to agbenchmark and control its behavior:
@@ -95,66 +70,42 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption("--keep-answers", action="store_true")
 
 
-def pytest_configure(config: pytest.Config) -> None:
+def pytest_configure(config: Config) -> None:
     # Register category markers to prevent "unknown marker" warnings
     for category in Category:
         config.addinivalue_line("markers", f"{category.value}: {category}")
 
+    config.pluginmanager.register(pytest_timeout.TimeoutPlugin(), "timeout")
+
+
+@pytest.fixture(scope="module")
+def config() -> AgentBenchmarkConfig:
+    return agbenchmark_config
+
 
 @pytest.fixture(autouse=True)
-def check_regression(request: pytest.FixtureRequest) -> None:
+def temp_folder(request: FixtureRequest) -> Path:
     """
-    Fixture that checks for every test if it should be treated as a regression test,
-    and whether to skip it based on that.
-
-    The test name is retrieved from the `request` object. Regression reports are loaded
-    from the path specified in the benchmark configuration.
-
-    Effect:
-    * If the `--improve` option is used and the current test is considered a regression
-      test, it is skipped.
-    * If the `--maintain` option is used and the current test  is not considered a
-      regression test, it is also skipped.
-
-    Args:
-        request: The request object from which the test name and the benchmark
-            configuration are retrieved.
+    Pytest fixture that sets up and tears down the temporary folder for each test.
+    It is automatically used in every test due to the 'autouse=True' parameter.
     """
-    with contextlib.suppress(FileNotFoundError):
-        rt_tracker = RegressionTestsTracker(agbenchmark_config.regression_tests_file)
+    temp_folder = Path(agbenchmark_config.temp_folder)
+    temp_folder.mkdir(parents=True, exist_ok=True)
 
-        test_name = request.node.parent.name
-        challenge_location = getattr(request.node.parent.cls, "CHALLENGE_LOCATION", "")
-        skip_string = f"Skipping {test_name} at {challenge_location}"
+    yield temp_folder
 
-        # Check if the test name exists in the regression tests
-        is_regression_test = rt_tracker.has_regression_test(test_name)
-        if request.config.getoption("--improve") and is_regression_test:
-            pytest.skip(f"{skip_string} because it's a regression test")
-        elif request.config.getoption("--maintain") and not is_regression_test:
-            pytest.skip(f"{skip_string} because it's not a regression test")
-
-
-@pytest.fixture(autouse=True, scope="session")
-def mock(request: pytest.FixtureRequest) -> bool:
-    """
-    Pytest fixture that retrieves the value of the `--mock` command-line option.
-    The `--mock` option is used to run the tests in mock mode.
-
-    Args:
-        request: The `pytest.FixtureRequest` from which the `--mock` option value
-            is retrieved.
-
-    Returns:
-        bool: Whether `--mock` is set for this session.
-    """
-    return request.config.getoption("--mock")
+    if not os.getenv("KEEP_TEMP_FOLDER_FILES"):
+        for filename in temp_folder.glob("*"):
+            try:
+                if filename.is_file() or filename.is_symlink():
+                    filename.unlink()
+                elif filename.is_dir():
+                    shutil.rmtree(filename)
+            except Exception as e:
+                logger.warning(f"Failed to delete {filename}. Reason: {e}")
 
 
-test_reports: dict[str, Test] = {}
-
-
-def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo) -> None:
+def pytest_runtest_makereport(item: Item, call: Function) -> None:
     """
     Pytest hook that is called when a test report is being generated.
     It is used to generate and finalize reports for each test.
@@ -163,7 +114,7 @@ def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo) -> None:
         item: The test item for which the report is being generated.
         call: The call object from which the test result is retrieved.
     """
-    challenge: type[BaseChallenge] = item.cls  # type: ignore
+    challenge: Type[BaseChallenge] = item.cls  # type: ignore
     challenge_id = challenge.info.eval_id
 
     if challenge_id not in test_reports:
@@ -179,156 +130,7 @@ def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo) -> None:
         )
 
 
-def timeout_monitor(start_time: int) -> None:
+def timeout_monitor(start_time: float) -> None:
     """
     Function that limits the total execution time of the test suite.
-    This function is supposed to be run in a separate thread and calls `pytest.exit`
-    if the total execution time has exceeded the global timeout.
-
-    Args:
-        start_time (int): The start time of the test suite.
-    """
-    while time.time() - start_time < GLOBAL_TIMEOUT:
-        time.sleep(1)  # check every second
-
-    pytest.exit("Test suite exceeded the global timeout", returncode=1)
-
-
-def pytest_sessionstart(session: pytest.Session) -> None:
-    """
-    Pytest hook that is called at the start of a test session.
-
-    Sets up and runs a `timeout_monitor` in a separate thread.
-    """
-    start_time = time.time()
-    t = threading.Thread(target=timeout_monitor, args=(start_time,))
-    t.daemon = True  # Daemon threads are abruptly stopped at shutdown
-    t.start()
-
-
-def pytest_sessionfinish(session: pytest.Session) -> None:
-    """
-    Pytest hook that is called at the end of a test session.
-
-    Finalizes and saves the test reports.
-    """
-    session_finish(agbenchmark_config)
-
-
-def pytest_generate_tests(metafunc: pytest.Metafunc):
-    n = metafunc.config.getoption("-N")
-    metafunc.parametrize("i_attempt", range(int(n)) if type(n) is str else [0])
-
-
-def pytest_collection_modifyitems(
-    items: list[pytest.Item], config: pytest.Config
-) -> None:
-    """
-    Pytest hook that is called after initial test collection has been performed.
-    Modifies the collected test items based on the agent benchmark configuration,
-    adding the dependency marker and category markers.
-
-    Args:
-        items: The collected test items to be modified.
-        config: The active pytest configuration.
-    """
-    rt_tracker = RegressionTestsTracker(agbenchmark_config.regression_tests_file)
-
-    try:
-        challenges_beaten_in_the_past = json.loads(
-            agbenchmark_config.challenges_already_beaten_file.read_bytes()
-        )
-    except FileNotFoundError:
-        challenges_beaten_in_the_past = {}
-
-    selected_tests: tuple[str] = config.getoption("--test")  # type: ignore
-    selected_categories: tuple[str] = config.getoption("--category")  # type: ignore
-
-    # Can't use a for-loop to remove items in-place
-    i = 0
-    while i < len(items):
-        item = items[i]
-        challenge = item.cls
-        challenge_name = item.cls.__name__
-
-        if not issubclass(challenge, BaseChallenge):
-            item.warn(
-                pytest.PytestCollectionWarning(
-                    f"Non-challenge item collected: {challenge}"
-                )
-            )
-            i += 1
-            continue
-
-        # --test: remove the test from the set if it's not specifically selected
-        if selected_tests and challenge.info.name not in selected_tests:
-            items.remove(item)
-            continue
-
-        # Filter challenges for --maintain, --improve, and --explore:
-        # --maintain -> only challenges expected to be passed (= regression tests)
-        # --improve -> only challenges that so far are not passed (reliably)
-        # --explore -> only challenges that have never been passed
-        is_regression_test = rt_tracker.has_regression_test(challenge.info.name)
-        has_been_passed = challenges_beaten_in_the_past.get(challenge.info.name, False)
-        if (
-            (config.getoption("--maintain") and not is_regression_test)
-            or (config.getoption("--improve") and is_regression_test)
-            or (config.getoption("--explore") and has_been_passed)
-        ):
-            items.remove(item)
-            continue
-
-        dependencies = challenge.info.dependencies
-        if (
-            config.getoption("--test")
-            or config.getoption("--no-dep")
-            or config.getoption("--maintain")
-        ):
-            # Ignore dependencies:
-            # --test -> user selected specific tests to run, don't care about deps
-            # --no-dep -> ignore dependency relations regardless of test selection
-            # --maintain -> all "regression" tests must pass, so run all of them
-            dependencies = []
-        elif config.getoption("--improve"):
-            # Filter dependencies, keep only deps that are not "regression" tests
-            dependencies = [
-                d for d in dependencies if not rt_tracker.has_regression_test(d)
-            ]
-
-        # Set category markers
-        challenge_categories = set(c.value for c in challenge.info.category)
-        for category in challenge_categories:
-            item.add_marker(category)
-
-        # Enforce category selection
-        if selected_categories:
-            if not challenge_categories.intersection(set(selected_categories)):
-                items.remove(item)
-                continue
-            # # Filter dependencies, keep only deps from selected categories
-            # dependencies = [
-            #     d for d in dependencies
-            #     if not set(d.categories).intersection(set(selected_categories))
-            # ]
-
-        # Skip items in optional categories that are not selected for the subject agent
-        challenge_optional_categories = challenge_categories & set(OPTIONAL_CATEGORIES)
-        if challenge_optional_categories and not (
-            agbenchmark_config.categories
-            and challenge_optional_categories.issubset(
-                set(agbenchmark_config.categories)
-            )
-        ):
-            logger.debug(
-                f"Skipping {challenge_name}: "
-                f"category {' and '.join(challenge_optional_categories)} is optional, "
-                "and not explicitly selected in the benchmark config."
-            )
-            items.remove(item)
-            continue
-
-        # Add marker for the DependencyManager
-        item.add_marker(pytest.mark.depends(on=dependencies, name=challenge_name))
-
-        i += 1
+    This function is supposed to be run in a separate thread and calls `pytest
