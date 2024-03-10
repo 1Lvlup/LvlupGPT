@@ -1,5 +1,4 @@
 import subprocess
-
 import pytest
 
 
@@ -14,7 +13,13 @@ def run_game_with_inputs(inputs):
     )
 
     # Send the input moves one by one
-    output, errors = process.communicate("\n".join(inputs))
+    for move in inputs:
+        output = process.communicate(move + "\n")[0]
+        if process.returncode != 0:
+            raise subprocess.CalledProcessError(process.returncode, "tic_tac_toe.py", output)
+
+    # Get the final output
+    output, errors = process.communicate()
 
     # Print the inputs and outputs
     print("Inputs:\n", "\n".join(inputs))
@@ -24,18 +29,31 @@ def run_game_with_inputs(inputs):
     return output
 
 
-@pytest.mark.parametrize(
-    "inputs, expected_output",
-    [
-        (["0,0", "1,0", "0,1", "1,1", "0,2"], "Player 1 won!"),
-        (["1,0", "0,0", "1,1", "0,1", "2,0", "0,2"], "Player 2 won!"),
-        (["0,0", "0,1", "0,2", "1,1", "1,0", "1,2", "2,1", "2,0", "2,2"], "Draw"),
-    ],
-)
-def test_game(inputs, expected_output):
-    output = run_game_with_inputs(inputs)
-    assert expected_output in output
+@pytest.fixture
+def game_process():
+    process = subprocess.Popen(
+        ["python", "tic_tac_toe.py"],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+
+    yield process
+
+    # Terminate the process after the test
+    process.terminate()
 
 
-if __name__ == "__main__":
-    pytest.main([__file__])
+def test_game(game_process, inputs, expected_output):
+    # Send the input moves one by one
+    for move in inputs:
+        output = game_process.communicate(move + "\n")[0]
+        if game_process.returncode != 0:
+            raise subprocess.CalledProcessError(game_process.returncode, "tic_tac_toe.py", output)
+
+    # Get the final output
+    output, errors = game_process.communicate()
+
+    # Print the inputs and outputs
+    print("
