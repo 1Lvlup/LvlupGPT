@@ -1,5 +1,9 @@
 import logging
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional
 
+import json_schema
 from autogpt.core.configuration import SystemConfiguration, UserConfigurable
 from autogpt.core.planning.schema import Task
 from autogpt.core.prompting import PromptStrategy
@@ -10,7 +14,6 @@ from autogpt.core.resource.model_providers import (
     ChatMessage,
     CompletionModelFunction,
 )
-from autogpt.core.utils.json_schema import JSONSchema
 
 logger = logging.getLogger(__name__)
 
@@ -18,9 +21,11 @@ logger = logging.getLogger(__name__)
 class NextAbilityConfiguration(SystemConfiguration):
     model_classification: LanguageModelClassification = UserConfigurable()
     system_prompt_template: str = UserConfigurable()
-    system_info: list[str] = UserConfigurable()
+    system_info: List[str] = UserConfigurable()
     user_prompt_template: str = UserConfigurable()
-    additional_ability_arguments: dict = UserConfigurable()
+    additional_ability_arguments: Dict[str, json_schema.Schema] = UserConfigurable(
+        default_factory=dict
+    )
 
 
 class NextAbility(PromptStrategy):
@@ -51,22 +56,22 @@ class NextAbility(PromptStrategy):
     )
 
     DEFAULT_ADDITIONAL_ABILITY_ARGUMENTS = {
-        "motivation": JSONSchema(
-            type=JSONSchema.Type.STRING,
+        "motivation": json_schema.Schema(
+            type=json_schema.Schema.Type.STRING,
             description=(
                 "Your justification for choosing choosing this function instead of a "
                 "different one."
             ),
         ),
-        "self_criticism": JSONSchema(
-            type=JSONSchema.Type.STRING,
+        "self_criticism": json_schema.Schema(
+            type=json_schema.Schema.Type.STRING,
             description=(
                 "Thoughtful self-criticism that explains why this function may not be "
                 "the best choice."
             ),
         ),
-        "reasoning": JSONSchema(
-            type=JSONSchema.Type.STRING,
+        "reasoning": json_schema.Schema(
+            type=json_schema.Schema.Type.STRING,
             description=(
                 "Your reasoning for choosing this function taking into account the "
                 "`motivation` and weighing the `self_criticism`."
@@ -80,7 +85,7 @@ class NextAbility(PromptStrategy):
         system_info=DEFAULT_SYSTEM_INFO,
         user_prompt_template=DEFAULT_USER_PROMPT_TEMPLATE,
         additional_ability_arguments={
-            k: v.to_dict() for k, v in DEFAULT_ADDITIONAL_ABILITY_ARGUMENTS.items()
+            k: v for k, v in DEFAULT_ADDITIONAL_ABILITY_ARGUMENTS.items()
         },
     )
 
@@ -88,19 +93,19 @@ class NextAbility(PromptStrategy):
         self,
         model_classification: LanguageModelClassification,
         system_prompt_template: str,
-        system_info: list[str],
+        system_info: List[str],
         user_prompt_template: str,
-        additional_ability_arguments: dict,
+        additional_ability_arguments: Dict[str, json_schema.Schema],
     ):
         self._model_classification = model_classification
         self._system_prompt_template = system_prompt_template
         self._system_info = system_info
         self._user_prompt_template = user_prompt_template
-        self._additional_ability_arguments = JSONSchema.parse_properties(
-            additional_ability_arguments
-        )
+        self._additional_ability_arguments = {
+            k: v.to_dict() for k, v in additional_ability_arguments.items()
+        }
         for p in self._additional_ability_arguments.values():
-            p.required = True
+            p["required"] = True
 
     @property
     def model_classification(self) -> LanguageModelClassification:
@@ -109,7 +114,7 @@ class NextAbility(PromptStrategy):
     def build_prompt(
         self,
         task: Task,
-        ability_specs: list[CompletionModelFunction],
+        ability_specs: List[CompletionModelFunction],
         os_info: str,
         api_budget: float,
         current_time: str,
@@ -134,70 +139,4 @@ class NextAbility(PromptStrategy):
         )
         template_kwargs["additional_info"] = to_numbered_list(
             [memory.summary() for memory in task.context.memories]
-            + [info for info in task.context.supplementary_info],
-            no_items_response=(
-                "There is no additional information available at this time."
-            ),
-            **template_kwargs,
-        )
-        template_kwargs["user_input"] = to_numbered_list(
-            [user_input for user_input in task.context.user_input],
-            no_items_response="There are no additional considerations at this time.",
-            **template_kwargs,
-        )
-        template_kwargs["acceptance_criteria"] = to_numbered_list(
-            [acceptance_criteria for acceptance_criteria in task.acceptance_criteria],
-            **template_kwargs,
-        )
-
-        template_kwargs["system_info"] = to_numbered_list(
-            self._system_info,
-            **template_kwargs,
-        )
-
-        system_prompt = ChatMessage.system(
-            self._system_prompt_template.format(**template_kwargs)
-        )
-        user_prompt = ChatMessage.user(
-            self._user_prompt_template.format(**template_kwargs)
-        )
-
-        return ChatPrompt(
-            messages=[system_prompt, user_prompt],
-            functions=ability_specs,
-            # TODO:
-            tokens_used=0,
-        )
-
-    def parse_response_content(
-        self,
-        response_content: AssistantChatMessage,
-    ) -> dict:
-        """Parse the actual text response from the objective model.
-
-        Args:
-            response_content: The raw response content from the objective model.
-
-        Returns:
-            The parsed response.
-
-        """
-        try:
-            if not response_content.tool_calls:
-                raise ValueError("LLM did not call any function")
-
-            function_name = response_content.tool_calls[0].function.name
-            function_arguments = json_loads(
-                response_content.tool_calls[0].function.arguments
-            )
-            parsed_response = {
-                "motivation": function_arguments.pop("motivation"),
-                "self_criticism": function_arguments.pop("self_criticism"),
-                "reasoning": function_arguments.pop("reasoning"),
-                "next_ability": function_name,
-                "ability_arguments": function_arguments,
-            }
-        except KeyError:
-            logger.debug(f"Failed to parse this response content: {response_content}")
-            raise
-        return parsed_response
+            + [info
