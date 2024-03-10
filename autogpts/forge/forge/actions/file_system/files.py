@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from ..registry import action
 
@@ -20,7 +20,10 @@ async def list_files(agent, task_id: str, path: str) -> List[str]:
     """
     List files in a workspace directory
     """
-    return agent.workspace.list(task_id=task_id, path=str(path))
+    if not agent.workspace.is_directory(task_id=task_id, path=path):
+        raise FileNotFoundError(f"Directory '{path}' not found")
+
+    return agent.workspace.list(task_id=task_id, path=path)
 
 
 @action(
@@ -46,6 +49,9 @@ async def write_file(agent, task_id: str, file_path: str, data: bytes):
     """
     Write data to a file
     """
+    if not agent.workspace.is_file(task_id=task_id, path=file_path):
+        raise FileNotFoundError(f"File '{file_path}' not found")
+
     if isinstance(data, str):
         data = data.encode()
 
@@ -66,13 +72,4 @@ async def write_file(agent, task_id: str, file_path: str, data: bytes):
             "name": "file_path",
             "description": "Path to the file",
             "type": "string",
-            "required": True,
-        },
-    ],
-    output_type="bytes",
-)
-async def read_file(agent, task_id: str, file_path: str) -> bytes:
-    """
-    Read data from a file
-    """
-    return agent.workspace.read(task_id=task_id, path=file_path)
+           
