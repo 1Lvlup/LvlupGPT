@@ -1,5 +1,6 @@
 # Exclude VCR cassettes from stats
-tests/vcr_cassettes/**/**.y*ml linguist-generated
+**/tests/vcr_cassettes/**/*.yml linguist-generated exclude=true
 
 # Mark documentation as such
-docs/**.md linguist-documentation
+**/docs/**/*.md linguist-documentation
+
