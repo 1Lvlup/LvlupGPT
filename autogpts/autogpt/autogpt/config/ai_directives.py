@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from typing import Any
 
 import yaml
 from pydantic import BaseModel, Field
@@ -9,7 +10,6 @@ from autogpt.utils import validate_yaml_file
 
 logger = logging.getLogger(__name__)
 
-
 class AIDirectives(BaseModel):
     """An object that contains the basic directives for the AI prompt.
 
@@ -18,21 +18,20 @@ class AIDirectives(BaseModel):
         resources (list): A list of resources that the AI can utilize.
         best_practices (list): A list of best practices that the AI should follow.
     """
-
     resources: list[str] = Field(default_factory=list)
     constraints: list[str] = Field(default_factory=list)
     best_practices: list[str] = Field(default_factory=list)
 
     @staticmethod
     def from_file(prompt_settings_file: Path) -> "AIDirectives":
-        (validated, message) = validate_yaml_file(prompt_settings_file)
+        validated, message = validate_yaml_file(prompt_settings_file)
         if not validated:
             logger.error(message, extra={"title": "FAILED FILE VALIDATION"})
             request_user_double_check()
             raise RuntimeError(f"File validation failed: {message}")
 
         with open(prompt_settings_file, encoding="utf-8") as file:
-            config_params = yaml.load(file, Loader=yaml.FullLoader)
+            config_params = yaml.safe_load(file)
 
         return AIDirectives(
             constraints=config_params.get("constraints", []),
@@ -41,8 +40,6 @@ class AIDirectives(BaseModel):
         )
 
     def __add__(self, other: "AIDirectives") -> "AIDirectives":
-        return AIDirectives(
-            resources=self.resources + other.resources,
-            constraints=self.constraints + other.constraints,
-            best_practices=self.best_practices + other.best_practices,
-        ).copy(deep=True)
+        merged_directives = self.dict()
+        merged_directives.update(other.dict())
+        return AIDirectives(**merged_directives).copy(deep=True)
