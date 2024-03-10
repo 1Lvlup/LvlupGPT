@@ -1,5 +1,5 @@
-ai_goals:
-- Test goal 1
-ai_name: testGPT
-ai_role: testRole
-api_budget: 1.0
+name: my_ai
+goals:
+  - Test goal 1
+role: my_role
+runtime_budget: 1.0
