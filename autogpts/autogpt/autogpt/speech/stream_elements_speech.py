@@ -2,53 +2,58 @@ from __future__ import annotations
 
 import logging
 import os
-
 import requests
-from playsound import playsound
+from typing import Boolean, Final
 
 from autogpt.core.configuration import SystemConfiguration, UserConfigurable
-from autogpt.speech.base import VoiceBase
 
 logger = logging.getLogger(__name__)
+
+STREAM_ELEMENTS_API_BASE_URL: Final = "https://api.streamelements.com/kappa/v2/speech"
 
 
 class StreamElementsConfig(SystemConfiguration):
     voice: str = UserConfigurable(default="Brian", from_env="STREAMELEMENTS_VOICE")
+    api_key: str = UserConfigurable(default=None, from_env="STREAMELEMENTS_API_KEY")
 
 
 class StreamElementsSpeech(VoiceBase):
     """Streamelements speech module for autogpt"""
 
-    def _setup(self, config: StreamElementsConfig) -> None:
-        """Setup the voices, API key, etc."""
+    def __init__(self, config: StreamElementsConfig):
         self.config = config
+        self.set_api_key(config.api_key)
 
-    def _speech(self, text: str, voice: str, _: int = 0) -> bool:
-        voice = self.config.voice
-        """Speak text using the streamelements API
+    def set_api_key(self, api_key: str | None) -> None:
+        """Set the API key for streamelements
+
+        Args:
+            api_key (str | None): The API key
+        """
+        if api_key is not None:
+            self.headers = {"Authorization": f"Bearer {api_key}"}
+        else:
+            logger.warning("API key not set for streamelements")
+            self.headers = {}
+
+    def api_key_is_set(self) -> Boolean:
+        """Check if the API key is set for streamelements
+
+        Returns:
+            Boolean: True if the API key is set, False otherwise
+        """
+        return self.headers.get("Authorization") is not None
+
+    def get_tts_url(self, text: str, voice: str) -> str:
+        """Get the TTS url for streamelements
 
         Args:
             text (str): The text to speak
             voice (str): The voice to use
 
         Returns:
-            bool: True if the request was successful, False otherwise
+            str: The TTS url
         """
-        tts_url = (
-            f"https://api.streamelements.com/kappa/v2/speech?voice={voice}&text={text}"
-        )
-        response = requests.get(tts_url)
+        return f"{STREAM_ELEMENTS_API_BASE_URL}?voice={voice}&text={text}"
 
-        if response.status_code == 200:
-            with open("speech.mp3", "wb") as f:
-                f.write(response.content)
-            playsound("speech.mp3")
-            os.remove("speech.mp3")
-            return True
-        else:
-            logger.error(
-                "Request failed with status code: %s, response content: %s",
-                response.status_code,
-                response.content,
-            )
-            return False
+    def _speech(self, text: str, voice: str, _: int
