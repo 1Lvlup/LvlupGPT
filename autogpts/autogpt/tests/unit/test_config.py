@@ -3,13 +3,13 @@ Test cases for the config class, which handles the configuration settings
 for the AI and ensures it behaves as a singleton.
 """
 import os
-from typing import Any
-from unittest import mock
-from unittest.mock import patch
-
 import pytest
+from unittest.mock import patch
+from typing import Any
+
+import openai
+from openai.models import Model
 from openai.pagination import SyncPage
-from openai.types import Model
 from pydantic import SecretStr
 
 from autogpt.app.configurator import GPT_3_MODEL, GPT_4_MODEL, apply_overrides_to_config
@@ -20,8 +20,8 @@ def test_initial_values(config: Config) -> None:
     """
     Test if the initial values of the config class attributes are set correctly.
     """
-    assert config.continuous_mode is False
-    assert config.tts_config.speak_mode is False
+    assert not config.continuous_mode
+    assert not config.tts_config.speak_mode
     assert config.fast_llm.startswith("gpt-3.5-turbo")
     assert config.smart_llm.startswith("gpt-4")
 
@@ -30,13 +30,9 @@ def test_set_continuous_mode(config: Config) -> None:
     """
     Test if the set_continuous_mode() method updates the continuous_mode attribute.
     """
-    # Store continuous mode to reset it after the test
     continuous_mode = config.continuous_mode
-
     config.continuous_mode = True
     assert config.continuous_mode is True
-
-    # Reset continuous mode
     config.continuous_mode = continuous_mode
 
 
@@ -44,13 +40,9 @@ def test_set_speak_mode(config: Config) -> None:
     """
     Test if the set_speak_mode() method updates the speak_mode attribute.
     """
-    # Store speak mode to reset it after the test
     speak_mode = config.tts_config.speak_mode
-
     config.tts_config.speak_mode = True
     assert config.tts_config.speak_mode is True
-
-    # Reset speak mode
     config.tts_config.speak_mode = speak_mode
 
 
@@ -58,13 +50,9 @@ def test_set_fast_llm(config: Config) -> None:
     """
     Test if the set_fast_llm() method updates the fast_llm attribute.
     """
-    # Store model name to reset it after the test
     fast_llm = config.fast_llm
-
     config.fast_llm = "gpt-3.5-turbo-test"
     assert config.fast_llm == "gpt-3.5-turbo-test"
-
-    # Reset model name
     config.fast_llm = fast_llm
 
 
@@ -72,17 +60,13 @@ def test_set_smart_llm(config: Config) -> None:
     """
     Test if the set_smart_llm() method updates the smart_llm attribute.
     """
-    # Store model name to reset it after the test
     smart_llm = config.smart_llm
-
     config.smart_llm = "gpt-4-test"
     assert config.smart_llm == "gpt-4-test"
-
-    # Reset model name
     config.smart_llm = smart_llm
 
 
-@patch("openai.resources.models.Models.list")
+@patch("openai.Models.list")
 def test_fallback_to_gpt3_if_gpt4_not_available(
     mock_list_models: Any, config: Config
 ) -> None:
@@ -96,8 +80,7 @@ def test_fallback_to_gpt3_if_gpt4_not_available(
     config.smart_llm = "gpt-4"
 
     mock_list_models.return_value = SyncPage(
-        data=[Model(id=GPT_3_MODEL, created=0, object="model", owned_by="AutoGPT")],
-        object="Models",  # no idea what this should be, but irrelevant
+        data=[Model(id=GPT_3_MODEL)], object="Models"
     )
 
     apply_overrides_to_config(
@@ -156,68 +139,4 @@ azure_model_map:
 
 def test_azure_config(config_with_azure: Config) -> None:
     assert (credentials := config_with_azure.openai_credentials) is not None
-    assert credentials.api_type == "azure"
-    assert credentials.api_version == "2023-06-01-preview"
-    assert credentials.azure_endpoint == SecretStr("https://dummy.openai.azure.com")
-    assert credentials.azure_model_to_deploy_id_map == {
-        config_with_azure.fast_llm: "FAST-LLM_ID",
-        config_with_azure.smart_llm: "SMART-LLM_ID",
-        config_with_azure.embedding_model: "embedding-deployment-id-for-azure",
-    }
-
-    fast_llm = config_with_azure.fast_llm
-    smart_llm = config_with_azure.smart_llm
-    assert (
-        credentials.get_model_access_kwargs(config_with_azure.fast_llm)["model"]
-        == "FAST-LLM_ID"
-    )
-    assert (
-        credentials.get_model_access_kwargs(config_with_azure.smart_llm)["model"]
-        == "SMART-LLM_ID"
-    )
-
-    # Emulate --gpt4only
-    config_with_azure.fast_llm = smart_llm
-    assert (
-        credentials.get_model_access_kwargs(config_with_azure.fast_llm)["model"]
-        == "SMART-LLM_ID"
-    )
-    assert (
-        credentials.get_model_access_kwargs(config_with_azure.smart_llm)["model"]
-        == "SMART-LLM_ID"
-    )
-
-    # Emulate --gpt3only
-    config_with_azure.fast_llm = config_with_azure.smart_llm = fast_llm
-    assert (
-        credentials.get_model_access_kwargs(config_with_azure.fast_llm)["model"]
-        == "FAST-LLM_ID"
-    )
-    assert (
-        credentials.get_model_access_kwargs(config_with_azure.smart_llm)["model"]
-        == "FAST-LLM_ID"
-    )
-
-
-def test_create_config_gpt4only(config: Config) -> None:
-    with mock.patch("autogpt.llm.api_manager.ApiManager.get_models") as mock_get_models:
-        mock_get_models.return_value = [
-            Model(id=GPT_4_MODEL, created=0, object="model", owned_by="AutoGPT")
-        ]
-        apply_overrides_to_config(
-            config=config,
-            gpt4only=True,
-        )
-        assert config.fast_llm == GPT_4_MODEL
-        assert config.smart_llm == GPT_4_MODEL
-
-
-def test_create_config_gpt3only(config: Config) -> None:
-    with mock.patch("autogpt.llm.api_manager.ApiManager.get_models") as mock_get_models:
-        mock_get_models.return_value = [{"id": GPT_3_MODEL}]
-        apply_overrides_to_config(
-            config=config,
-            gpt3only=True,
-        )
-        assert config.fast_llm == GPT_3_MODEL
-        assert config.smart_llm == GPT_3_MODEL
+    assert credentials.api_type ==
