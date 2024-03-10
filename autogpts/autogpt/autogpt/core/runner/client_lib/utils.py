@@ -1,9 +1,13 @@
 import asyncio
 import functools
-from bdb import BdbQuit
+import sys
 from typing import Any, Callable, Coroutine, ParamSpec, TypeVar
 
-import click
+if sys.version_info >= (3, 7):
+    asyncio.run = asyncio.run  # type: ignore
+else:
+    asyncio.run = lambda coro: coro()  # type: ignore
+
 
 P = ParamSpec("P")
 T = TypeVar("T")
@@ -55,8 +59,7 @@ def handle_exceptions(
 
 
 def coroutine(f: Callable[P, Coroutine[Any, Any, T]]) -> Callable[P, T]:
-    @functools.wraps(f)
-    def wrapper(*args: P.args, **kwargs: P.kwargs):
-        return asyncio.run(f(*args, **kwargs))
+    """A decorator for coroutine functions that ensures proper error handling.
 
-    return wrapper
+    This decorator wraps a coroutine function so that it catches any exceptions and
+    either logs them or drops the user into a debugger, depending on the `with_
