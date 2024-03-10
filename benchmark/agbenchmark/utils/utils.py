@@ -1,22 +1,18 @@
-# radio charts, logs, helper functions for tests, anything else relevant.
 import json
 import logging
 import os
 import re
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Iterable, Optional, TypeVar, overload
+from typing import Any, Callable, Iterable, List, Optional, TypeVar, Union
 
 import click
 from dotenv import load_dotenv
 from pydantic import BaseModel
 
-from agbenchmark.reports.processing.report_types import Test
-from agbenchmark.utils.data_types import DIFFICULTY_MAP, DifficultyLevel
-
 load_dotenv()
 
-AGENT_NAME = os.getenv("AGENT_NAME")
+AgentName = str = os.getenv("AGENT_NAME")
 
 logger = logging.getLogger(__name__)
 
@@ -24,11 +20,9 @@ T = TypeVar("T")
 E = TypeVar("E", bound=Enum)
 
 
-def replace_backslash(value: Any) -> Any:
+def replace_backslash(value: Union[str, List, Dict]) -> Union[str, List, Dict]:
     if isinstance(value, str):
-        return re.sub(
-            r"\\+", "/", value
-        )  # replace one or more backslashes with a forward slash
+        return re.sub(r"\\+", "/", value)  # replace one or more backslashes with a forward slash
     elif isinstance(value, list):
         return [replace_backslash(i) for i in value]
     elif isinstance(value, dict):
@@ -37,17 +31,15 @@ def replace_backslash(value: Any) -> Any:
         return value
 
 
-def get_test_path(json_file: str | Path) -> str:
+def get_test_path(json_file: Union[str, Path]) -> str:
     if isinstance(json_file, str):
         json_file = Path(json_file)
 
-    # Find the index of "agbenchmark" in the path parts
     try:
         agbenchmark_index = json_file.parts.index("benchmark")
     except ValueError:
         raise ValueError("Invalid challenge location.")
 
-    # Create the path from "agbenchmark" onwards
     challenge_location = Path(*json_file.parts[agbenchmark_index:])
 
     formatted_location = replace_backslash(str(challenge_location))
@@ -58,7 +50,7 @@ def get_test_path(json_file: str | Path) -> str:
 
 
 def get_highest_success_difficulty(
-    data: dict[str, Test], just_string: Optional[bool] = None
+    data: Dict[str, Test], just_string: Optional[bool] = None
 ) -> str:
     highest_difficulty = None
     highest_difficulty_level = 0
@@ -85,10 +77,10 @@ def get_highest_success_difficulty(
                     continue
         except Exception as e:
             logger.warning(
-                "An unexpected error [1] occurred while analyzing report [2]."
+                "An unexpected error occurred while analyzing report. "
                 "Please notify a maintainer.\n"
-                f"Report data [1]: {data}\n"
-                f"Error [2]: {e}"
+                f"Report data: {data}\n"
+                f"Error: {e}"
             )
             logger.warning(
                 "Make sure you selected the right test, no reports were generated."
@@ -108,19 +100,8 @@ def get_highest_success_difficulty(
 
 
 # def get_git_commit_sha(directory: Path) -> Optional[str]:
-#     try:
-#         repo = git.Repo(directory)
-#         remote_url = repo.remotes.origin.url
-#         if remote_url.endswith(".git"):
-#             remote_url = remote_url[:-4]
-#         git_commit_sha = f"{remote_url}/tree/{repo.head.commit.hexsha}"
-
-#         # logger.debug(f"GIT_COMMIT_SHA: {git_commit_sha}")
-#         return git_commit_sha
-#     except Exception:
-#         # logger.error(f"{directory} is not a git repository!")
-#         return None
-
+#     # ...
+#
 
 def write_pretty_json(data, json_file):
     sorted_data = deep_sort(data)
@@ -133,19 +114,14 @@ def write_pretty_json(data, json_file):
 def pretty_print_model(model: BaseModel, include_header: bool = True) -> None:
     indent = ""
     if include_header:
-        # Try to find the ID and/or name attribute of the model
-        id, name = None, None
+        identifiers = []
         for attr, value in model.dict().items():
             if attr == "id" or attr.endswith("_id"):
-                id = value
+                identifiers.append(value)
             if attr.endswith("name"):
-                name = value
-            if id and name:
-                break
-        identifiers = [v for v in [name, id] if v]
-        click.echo(
-            f"{model.__repr_name__()}{repr(identifiers) if identifiers else ''}:"
-        )
+                identifiers.append(value)
+        identifiers_str = repr(identifiers) if identifiers else ""
+        click.echo(f"{model.__repr_name__()}{identifiers_str}:")
         indent = " " * 2
 
     k_col_width = max(len(k) for k in model.dict().keys())
@@ -167,46 +143,3 @@ def pretty_print_model(model: BaseModel, include_header: bool = True) -> None:
 
 
 def deep_sort(obj):
-    """
-    Recursively sort the keys in JSON object
-    """
-    if isinstance(obj, dict):
-        return {k: deep_sort(v) for k, v in sorted(obj.items())}
-    if isinstance(obj, list):
-        return [deep_sort(elem) for elem in obj]
-    return obj
-
-
-@overload
-def sorted_by_enum_index(
-    sortable: Iterable[E],
-    enum: type[E],
-    *,
-    reverse: bool = False,
-) -> list[E]:
-    ...
-
-
-@overload
-def sorted_by_enum_index(
-    sortable: Iterable[T],
-    enum: type[Enum],
-    *,
-    key: Callable[[T], Enum | None],
-    reverse: bool = False,
-) -> list[T]:
-    ...
-
-
-def sorted_by_enum_index(
-    sortable: Iterable[T],
-    enum: type[Enum],
-    *,
-    key: Callable[[T], Enum | None] = lambda x: x,  # type: ignore
-    reverse: bool = False,
-) -> list[T]:
-    return sorted(
-        sortable,
-        key=lambda x: enum._member_names_.index(e.name) if (e := key(x)) else 420e3,
-        reverse=reverse,
-    )
