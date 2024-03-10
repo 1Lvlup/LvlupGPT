@@ -1,7 +1,7 @@
 import logging
 import os
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Union
 
 from dotenv import load_dotenv
 
@@ -15,12 +15,13 @@ logger = logging.getLogger(__name__)
 
 def run_benchmark(
     config: AgentBenchmarkConfig,
+    *,
     maintain: bool = False,
     improve: bool = False,
     explore: bool = False,
-    tests: tuple[str] = tuple(),
-    categories: tuple[str] = tuple(),
-    skip_categories: tuple[str] = tuple(),
+    tests: Union[Sequence[str], None] = None,
+    categories: Union[Sequence[str], None] = None,
+    skip_categories: Union[Sequence[str], None] = None,
     attempts_per_challenge: int = 1,
     mock: bool = False,
     no_dep: bool = False,
@@ -35,8 +36,6 @@ def run_benchmark(
     """
     import pytest
 
-    from agbenchmark.reports.ReportManager import SingletonReportManager
-
     validate_args(
         maintain=maintain,
         improve=improve,
@@ -48,8 +47,6 @@ def run_benchmark(
         cutoff=cutoff,
     )
 
-    SingletonReportManager()
-
     for key, value in vars(config).items():
         logger.debug(f"config.{key} = {repr(value)}")
 
@@ -58,14 +55,20 @@ def run_benchmark(
     if tests:
         logger.info(f"Running specific test(s): {' '.join(tests)}")
         pytest_args += [f"--test={t}" for t in tests]
-    else:
+    elif categories or skip_categories or maintain or improve or explore:
         all_categories = get_unique_categories()
 
-        if categories or skip_categories:
-            categories_to_run = set(categories) or all_categories
-            if skip_categories:
-                categories_to_run = categories_to_run.difference(set(skip_categories))
-            assert categories_to_run, "Error: You can't skip all categories"
+        if categories:
+            categories_to_run = set(categories)
+            if not categories_to_run:
+                raise ValueError("Error: You can't run an empty category list")
+            categories_to_run = categories_to_run.intersection(all_categories)
+            if not categories_to_run:
+                raise InvalidInvocationError(
+                    "One or more invalid categories were specified: "
+                    f"{', '.join(categories)}.\n"
+                    f"Valid categories are: {', '.join(all_categories)}."
+                )
             pytest_args += [f"--category={c}" for c in categories_to_run]
             logger.info(f"Running tests of category: {categories_to_run}")
         else:
@@ -129,30 +132,10 @@ def validate_args(
     no_cutoff: bool,
     cutoff: Optional[int],
 ) -> None:
-    if categories:
-        all_categories = get_unique_categories()
-        invalid_categories = set(categories) - all_categories
-        if invalid_categories:
-            raise InvalidInvocationError(
-                "One or more invalid categories were specified: "
-                f"{', '.join(invalid_categories)}.\n"
-                f"Valid categories are: {', '.join(all_categories)}."
-            )
-
     if (maintain + improve + explore) > 1:
         raise InvalidInvocationError(
             "You can't use --maintain, --improve or --explore at the same time. "
             "Please choose one."
         )
 
-    if tests and (categories or skip_categories or maintain or improve or explore):
-        raise InvalidInvocationError(
-            "If you're running a specific test make sure no other options are "
-            "selected. Please just pass the --test."
-        )
-
-    if no_cutoff and cutoff:
-        raise InvalidInvocationError(
-            "You can't use both --nc and --cutoff at the same time. "
-            "Please choose one."
-        )
+    if
