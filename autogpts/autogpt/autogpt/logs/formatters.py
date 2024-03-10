@@ -1,53 +1,57 @@
 import logging
-
+import typing as t
 from colorama import Style
 from google.cloud.logging_v2.handlers import CloudLoggingFilter, StructuredLogHandler
+from google.cloud.logging_v2.types import StructuredLog
+from datetime import datetime
 
-from autogpt.core.runner.client_lib.logging import FancyConsoleFormatter
+remove_color_codes = lambda msg: re.sub(r'\x1b\[[0-9;]*[mK]', '', msg)
 
-from .utils import remove_color_codes
+class AutoGptFormatter(logging.Formatter):
+    LEVEL_COLOR_MAP = {
+        10: '',  # DEBUG
+        20: '',  # INFO
+        30: '\x1b[31m',  # WARNING
+        40: '\x1b[31m',  # ERROR
+        50: '\x1b[31m',  # CRITICAL
+    }
 
-
-class AutoGptFormatter(FancyConsoleFormatter):
-    def __init__(self, *args, no_color: bool = False, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, no_color: bool = False, **kwargs):
+        super().__init__(**kwargs)
         self.no_color = no_color
 
-    def format(self, record: logging.LogRecord) -> str:
-        # Make sure `msg` is a string
-        if not hasattr(record, "msg"):
-            record.msg = ""
-        elif not type(record.msg) is str:
-            record.msg = str(record.msg)
+    def formatTime(self, record: logging.LogRecord, datefmt: str = None) -> str:
+        if datefmt is None:
+            datefmt = '%Y-%m-%d %H:%M:%S'
+        return datetime.fromtimestamp(record.created).strftime(datefmt)
 
-        # Strip color from the message to prevent color spoofing
-        if record.msg and not getattr(record, "preserve_color", False):
-            record.msg = remove_color_codes(record.msg)
+    def formatException(self, exc_info: t.Optional[t.Tuple[t.Type[BaseException], BaseException, t.Traceback]] = None) -> str:
+        result = super().formatException(exc_info)
+        if not self.no_color:
+            result = '\x1b[31m' + result + '\x1b[0m'
+        return result
 
-        # Determine color for title
-        title = getattr(record, "title", "")
-        title_color = getattr(record, "title_color", "") or self.LEVEL_COLOR_MAP.get(
-            record.levelno, ""
-        )
-        if title and title_color:
-            title = f"{title_color + Style.BRIGHT}{title}{Style.RESET_ALL}"
-        # Make sure record.title is set, and padded with a space if not empty
-        record.title = f"{title} " if title else ""
-
-        if self.no_color:
-            return remove_color_codes(super().format(record))
-        else:
-            return super().format(record)
-
-
-class StructuredLoggingFormatter(StructuredLogHandler, logging.Formatter):
-    def __init__(self):
-        # Set up CloudLoggingFilter to add diagnostic info to the log records
-        self.cloud_logging_filter = CloudLoggingFilter()
-
-        # Init StructuredLogHandler
-        super().__init__()
+    def formatMessage(self, message: t.Any) -> str:
+        if not self.no_color:
+            message = remove_color_codes(message)
+        return message
 
     def format(self, record: logging.LogRecord) -> str:
-        self.cloud_logging_filter.filter(record)
+        message = self.formatMessage(record.msg)
+        record.msg = message
         return super().format(record)
+
+    def format_record(self, record: logging.LogRecord) -> str:
+        message = self.formatMessage(record.msg)
+        record.msg = message
+        if not self.no_color:
+            record.msg = remove_color_codes(record.msg)
+        return super().format(record)
+
+    def format_message(self, record: logging.LogRecord) -> str:
+        message = super().formatMessage(record)
+        if not self.no_color:
+            message = remove_color_codes(message)
+        return message
+
+class StructuredLog
