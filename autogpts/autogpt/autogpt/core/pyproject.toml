@@ -1,12 +1,11 @@
 [tool.poetry]
-name = "agpt"
+name = "autogpt"
 version = "1.0.0"
-authors = ["Significant Gravitas <support@agpt.co>"]
-maintainers = ["Reinier van der Leer <reinier.vanderleer@agpt.co>"]
 description = "An open-source attempt at an autonomous generalist agent"
 readme = "README.md"
 repository = "https://github.com/Significant-Gravitas/AutoGPT/tree/master/autogpts/agpt"
 # documentation = "https://docs.agpt.co/autogpts/agpt"  # TODO
+authors = ["Significant Gravitas <support@agpt.co>", "Reinier van der Leer <reinier.vanderleer@agpt.co>"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
@@ -40,8 +39,21 @@ build-backend = "poetry.core.masonry.api"
 line-length = 88
 target-version = ['py310']
 include = '\.pyi?$'
-packages = ["autogpt"]
-extend-exclude = '.+/(dist|.venv|venv|build)/.+'
+exclude = '''
+    /(
+        .tox
+        | .venv
+        | venv
+        | build
+        | dist
+        | .eggs
+        | .git
+        | .mypy_cache
+        | .pytest_cache
+        | reports
+        | htmlcov
+    )/
+'''
 
 [tool.isort]
 profile = "black"
@@ -56,22 +68,4 @@ sections = [
     "STDLIB",
     "THIRDPARTY",
     "FIRSTPARTY",
-    "LOCALFOLDER"
-]
-skip = '''
-    .tox
-    __pycache__
-    *.pyc
-    .env
-    venv*/*
-    .venv/*
-    reports/*
-    dist/*
-
-'''
-
-[tool.pytest.ini_options]
-markers = [
-    "requires_openai_api_key",
-    "requires_huggingface_api_key"
-]
+    "LOCALFOLDER
