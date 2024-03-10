@@ -1,4 +1,12 @@
-3145
-3791
-9317
-9471
+# List of numbers
+numbers = [3145, 3791, 9317, 9471]
+
+# Calculate sum of numbers
+sum_of_numbers = sum(numbers)
+
+# Calculate average of numbers
+average_of_numbers = sum_of_numbers / len(numbers)
+
+# Print sum and average
+print("Sum:", sum_of_numbers)
+print("Average:", average_of_numbers)
