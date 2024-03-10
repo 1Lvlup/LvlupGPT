@@ -1,8 +1,18 @@
 import pytest
+from typing import List, Optional
+from unittest.mock import AsyncMock, patch
 
 from .agent import Agent
 from .db import AgentDB
-from .model import StepRequestBody, Task, TaskListResponse, TaskRequestBody
+from .model import (
+    Artifact,
+    ArtifactRequestBody,
+    Step,
+    StepRequestBody,
+    Task,
+    TaskListResponse,
+    TaskRequestBody,
+)
 from .workspace import LocalWorkspace
 
 
@@ -10,12 +20,14 @@ from .workspace import LocalWorkspace
 def agent():
     db = AgentDB("sqlite:///test.db")
     workspace = LocalWorkspace("./test_workspace")
-    return Agent(db, workspace)
+    agent = Agent(db, workspace)
+    # Patch list_artifacts to avoid actual database access
+    agent.list_artifacts = AsyncMock(return_value=[])
+    return agent
 
 
-@pytest.mark.skip
 @pytest.mark.asyncio
-async def test_create_task(agent):
+async def test_create_task(agent: Agent):
     task_request = TaskRequestBody(
         input="test_input", additional_input={"input": "additional_test_input"}
     )
@@ -23,9 +35,8 @@ async def test_create_task(agent):
     assert task.input == "test_input"
 
 
-@pytest.mark.skip
 @pytest.mark.asyncio
-async def test_list_tasks(agent):
+async def test_list_tasks(agent: Agent):
     task_request = TaskRequestBody(
         input="test_input", additional_input={"input": "additional_test_input"}
     )
@@ -34,9 +45,8 @@ async def test_list_tasks(agent):
     assert isinstance(tasks, TaskListResponse)
 
 
-@pytest.mark.skip
 @pytest.mark.asyncio
-async def test_get_task(agent):
+async def test_get_task(agent: Agent):
     task_request = TaskRequestBody(
         input="test_input", additional_input={"input": "additional_test_input"}
     )
@@ -45,9 +55,8 @@ async def test_get_task(agent):
     assert retrieved_task.task_id == task.task_id
 
 
-@pytest.mark.skip
 @pytest.mark.asyncio
-async def test_create_and_execute_step(agent):
+async def test_create_and_execute_step(agent: Agent):
     task_request = TaskRequestBody(
         input="test_input", additional_input={"input": "additional_test_input"}
     )
@@ -60,9 +69,8 @@ async def test_create_and_execute_step(agent):
     assert step.additional_input == {"input": "additional_test_input"}
 
 
-@pytest.mark.skip
 @pytest.mark.asyncio
-async def test_get_step(agent):
+async def test_get_step(agent: Agent):
     task_request = TaskRequestBody(
         input="test_input", additional_input={"input": "additional_test_input"}
     )
@@ -75,16 +83,14 @@ async def test_get_step(agent):
     assert retrieved_step.step_id == step.step_id
 
 
-@pytest.mark.skip
 @pytest.mark.asyncio
-async def test_list_artifacts(agent):
+async def test_list_artifacts(agent: Agent):
     artifacts = await agent.list_artifacts()
-    assert isinstance(artifacts, list)
+    assert isinstance(artifacts, List[Artifact])
 
 
-@pytest.mark.skip
 @pytest.mark.asyncio
-async def test_create_artifact(agent):
+async def test_create_artifact(agent: Agent):
     task_request = TaskRequestBody(
         input="test_input", additional_input={"input": "additional_test_input"}
     )
@@ -94,14 +100,14 @@ async def test_create_artifact(agent):
     assert artifact.uri == "test_uri"
 
 
-@pytest.mark.skip
 @pytest.mark.asyncio
-async def test_get_artifact(agent):
+async def test_get_artifact(agent: Agent):
     task_request = TaskRequestBody(
         input="test_input", additional_input={"input": "additional_test_input"}
     )
     task = await agent.create_task(task_request)
     artifact_request = ArtifactRequestBody(file=None, uri="test_uri")
     artifact = await agent.create_artifact(task.task_id, artifact_request)
-    retrieved_artifact = await agent.get_artifact(task.task_id, artifact.artifact_id)
+    with patch("pathlib.Path.exists", return_value=True):
+        retrieved_artifact = await agent.get_artifact(task.task_id, artifact.artifact_id)
     assert retrieved_artifact.artifact_id == artifact.artifact_id
