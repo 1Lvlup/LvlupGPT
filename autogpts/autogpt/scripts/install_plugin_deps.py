@@ -1,13 +1,21 @@
 import logging
 import os
-import subprocess
-import sys
 import zipfile
-from glob import glob
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+def initialize_logger():
+    """Initialize the logger with a custom format and a file handler."""
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        handlers=[logging.FileHandler("install_deps.log"), logging.StreamHandler()],
+    )
+
+def file_exists(path):
+    """Check if a file exists."""
+    return path.exists() and not path.is_dir()
 
 def install_plugin_dependencies():
     """
@@ -21,12 +29,21 @@ def install_plugin_dependencies():
     """
     plugins_dir = Path(os.getenv("PLUGINS_DIR", "plugins"))
 
+    if not plugins_dir.exists():
+        logger.error(f"The plugins directory '{plugins_dir}' does not exist.")
+        return
+
+    initialize_logger()
+
     logger.debug("Checking for dependencies in zipped plugins...")
 
     # Install zip-based plugins
     for plugin_archive in plugins_dir.glob("*.zip"):
+        if not file_exists(plugin_archive):
+            continue
+
         logger.debug(f"Checking for requirements in '{plugin_archive}'...")
-        with zipfile.ZipFile(str(plugin_archive), "r") as zfile:
+        with zipfile.ZipFile(plugin_archive, "r") as zfile:
             if not zfile.namelist():
                 continue
 
@@ -42,6 +59,10 @@ def install_plugin_dependencies():
                 logger.debug(e.args[0])
                 continue
 
+            if not file_exists(extracted):
+                logger.warning(f"Requirements file '{basereqs}' not found in the zip file.")
+                continue
+
             logger.debug(f"Installing dependencies from '{basereqs}'...")
             subprocess.check_call(
                 [sys.executable, "-m", "pip", "install", "-r", extracted]
@@ -52,15 +73,8 @@ def install_plugin_dependencies():
     logger.debug("Checking for dependencies in other plugin folders...")
 
     # Install directory-based plugins
-    for requirements_file in glob(f"{plugins_dir}/*/requirements.txt"):
-        logger.debug(f"Installing dependencies from '{requirements_file}'...")
-        subprocess.check_call(
-            [sys.executable, "-m", "pip", "install", "-r", requirements_file],
-            stdout=subprocess.DEVNULL,
-        )
+    for requirements_file in plugins_dir.glob("*/requirements.txt"):
+        if not file_exists(requirements_file):
+            continue
 
-    logger.debug("Finished installing plugin dependencies")
-
-
-if __name__ == "__main__":
-    install_plugin_dependencies()
+        logger.debug(f"Installing dependencies from '{requirements_file}'..."
