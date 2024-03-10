@@ -2,33 +2,35 @@ import glob
 import json
 import logging
 from pathlib import Path
+from typing import Set
+
+import pkg_resources  # for importing modules from package directory
 
 from .base import BaseChallenge, ChallengeInfo
-from .builtin import OPTIONAL_CATEGORIES
+from .builtin import BuiltinChallenge, OPTIONAL_CATEGORIES
 
 logger = logging.getLogger(__name__)
 
 
 def get_challenge_from_source_uri(source_uri: str) -> type[BaseChallenge]:
-    from .builtin import BuiltinChallenge
-    from .webarena import WebArenaChallenge
+    module_name, _ = source_uri.split("/", 1)
 
-    provider_prefix = source_uri.split("/", 1)[0]
+    try:
+        challenge_module = pkg_resources.import_module(f"..{module_name}", __name__)
+    except ModuleNotFoundError:
+        raise ValueError(f"Cannot resolve source_uri '{source_uri}'")
 
-    if provider_prefix == BuiltinChallenge.SOURCE_URI_PREFIX:
-        return BuiltinChallenge.from_source_uri(source_uri)
-
-    if provider_prefix == WebArenaChallenge.SOURCE_URI_PREFIX:
-        return WebArenaChallenge.from_source_uri(source_uri)
-
-    raise ValueError(f"Cannot resolve source_uri '{source_uri}'")
+    try:
+        return getattr(challenge_module, "Challenge")
+    except AttributeError:
+        raise ValueError(f"Invalid source_uri '{source_uri}'. Module does not define a Challenge class.")
 
 
-def get_unique_categories() -> set[str]:
+def get_unique_categories() -> Set[str]:
     """
     Reads all challenge spec files and returns a set of all their categories.
     """
-    categories = set()
+    categories: Set[str] = set()
 
     challenges_dir = Path(__file__).parent
     glob_path = f"{challenges_dir}/**/data.json"
@@ -38,11 +40,11 @@ def get_unique_categories() -> set[str]:
             try:
                 challenge_data = json.load(f)
                 categories.update(challenge_data.get("category", []))
-            except json.JSONDecodeError:
-                logger.error(f"Error: {data_file} is not a valid JSON file.")
+            except json.JSONDecodeError as e:
+                logger.error(f"Error: {data_file} is not a valid JSON file. Error: {e}")
                 continue
-            except IOError:
-                logger.error(f"IOError: file could not be read: {data_file}")
+            except IOError as e:
+                logger.error(f"IOError: file could not be read: {data_file}. Error: {e}")
                 continue
 
     return categories
