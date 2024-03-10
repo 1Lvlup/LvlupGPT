@@ -5,7 +5,7 @@ The logic itself is in main.py.
 """
 
 import warnings
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 import pytest
 from _pytest.config.argparsing import OptionGroup, Parser
@@ -13,10 +13,10 @@ from _pytest.nodes import Item
 
 from .main import DependencyManager
 
-managers: list[DependencyManager] = []
+managers: List[DependencyManager] = []
 
 
-DEPENDENCY_PROBLEM_ACTIONS: dict[str, Callable[[str], None] | None] = {
+DEPENDENCY_PROBLEM_ACTIONS: Dict[str, Callable[[str], None] | None] = {
     "run": None,
     "skip": lambda m: pytest.skip(m),
     "fail": lambda m: pytest.fail(m, False),
@@ -42,7 +42,7 @@ def _add_ini_and_option(
 
 
 def _get_ini_or_option(
-    config: Any, name: str, choices: Optional[list[str]]
+    config: Any, name: str, choices: Optional[List[str]]
 ) -> str | None:
     """Get an option from either the ini file or the command line flags, the latter taking precedence."""
     value = config.getini(name)
@@ -139,56 +139,4 @@ def pytest_configure(config: Any) -> None:
 
 
 @pytest.hookimpl(trylast=True)
-def pytest_collection_modifyitems(config: Any, items: list[Item]) -> None:
-    manager = managers[-1]
-
-    # Register the founds tests on the manager
-    manager.items = items
-
-    # Show the extra information if requested
-    if config.getoption("list_dependency_names"):
-        verbose = config.getoption("verbose") > 1
-        manager.print_name_map(verbose)
-    if config.getoption("list_processed_dependencies"):
-        color = config.getoption("color")
-        manager.print_processed_dependencies(color)
-
-    # Reorder the items so that tests run after their dependencies
-    items[:] = manager.sorted_items
-
-
-@pytest.hookimpl(tryfirst=True, hookwrapper=True)
-def pytest_runtest_makereport(item: Item) -> Any:
-    manager = managers[-1]
-
-    # Run the step
-    outcome = yield
-
-    # Store the result on the manager
-    manager.register_result(item, outcome.get_result())
-
-
-def pytest_runtest_call(item: Item) -> None:
-    manager = managers[-1]
-
-    # Handle missing dependencies
-    missing_dependency_action = DEPENDENCY_PROBLEM_ACTIONS[
-        manager.options["missing_dependency_action"]
-    ]
-    missing = manager.get_missing(item)
-    if missing_dependency_action and missing:
-        missing_dependency_action(
-            f'{item.nodeid} depends on {", ".join(missing)}, which was not found'
-        )
-
-    # Check whether all dependencies succeeded
-    failed_dependency_action = DEPENDENCY_PROBLEM_ACTIONS[
-        manager.options["failed_dependency_action"]
-    ]
-    failed = manager.get_failed(item)
-    if failed_dependency_action and failed:
-        failed_dependency_action(f'{item.nodeid} depends on {", ".join(failed)}')
-
-
-def pytest_unconfigure() -> None:
-    managers.pop()
+def pytest_collection_modifyitems(config: Any, items: List[Item
