@@ -1,10 +1,10 @@
 import enum
-from logging import Logger
-from textwrap import indent
-from typing import Literal, Optional
+import re
+from typing import Any, Dict, List, Literal, Optional, Union
 
-from jsonschema import Draft7Validator
+import jsonschema
 from pydantic import BaseModel
+from textwrap import indent
 
 
 class JSONSchema(BaseModel):
@@ -16,28 +16,27 @@ class JSONSchema(BaseModel):
         INTEGER = "integer"
         BOOLEAN = "boolean"
 
-    # TODO: add docstrings
     description: Optional[str] = None
     type: Optional[Type] = None
-    enum: Optional[list] = None
+    enum: Optional[List[Union[str, int, float, bool]]] = None
     required: bool = False
     items: Optional["JSONSchema"] = None
-    properties: Optional[dict[str, "JSONSchema"]] = None
-    minimum: Optional[int | float] = None
-    maximum: Optional[int | float] = None
-    minItems: Optional[int] = None
-    maxItems: Optional[int] = None
+    properties: Optional[Dict[str, "JSONSchema"]] = None
+    minimum: Optional[Union[int, float]] = None
+    maximum: Optional[Union[int, float]] = None
+    min_items: Optional[int] = None
+    max_items: Optional[int] = None
 
-    def to_dict(self) -> dict:
-        schema: dict = {
+    def to_dict(self) -> Dict[str, Any]:
+        schema: Dict[str, Any] = {
             "type": self.type.value if self.type else None,
             "description": self.description,
         }
         if self.type == "array":
             if self.items:
                 schema["items"] = self.items.to_dict()
-            schema["minItems"] = self.minItems
-            schema["maxItems"] = self.maxItems
+            schema["minItems"] = self.min_items
+            schema["maxItems"] = self.max_items
         elif self.type == "object":
             if self.properties:
                 schema["properties"] = {
@@ -49,15 +48,15 @@ class JSONSchema(BaseModel):
         elif self.enum:
             schema["enum"] = self.enum
         else:
-            schema["minumum"] = self.minimum
+            schema["minimum"] = self.minimum
             schema["maximum"] = self.maximum
 
         schema = {k: v for k, v in schema.items() if v is not None}
 
         return schema
 
-    @staticmethod
-    def from_dict(schema: dict) -> "JSONSchema":
+    @classmethod
+    def from_dict(cls, schema: Dict[str, Any]) -> "JSONSchema":
         return JSONSchema(
             description=schema.get("description"),
             type=schema["type"],
@@ -68,12 +67,12 @@ class JSONSchema(BaseModel):
             else None,
             minimum=schema.get("minimum"),
             maximum=schema.get("maximum"),
-            minItems=schema.get("minItems"),
-            maxItems=schema.get("maxItems"),
+            min_items=schema.get("minItems"),
+            max_items=schema.get("maxItems"),
         )
 
     @staticmethod
-    def parse_properties(schema_node: dict) -> dict[str, "JSONSchema"]:
+    def parse_properties(schema_node: Dict[str, Any]) -> Dict[str, "JSONSchema"]:
         properties = (
             {k: JSONSchema.from_dict(v) for k, v in schema_node["properties"].items()}
             if "properties" in schema_node
@@ -85,8 +84,8 @@ class JSONSchema(BaseModel):
         return properties
 
     def validate_object(
-        self, object: object, logger: Logger
-    ) -> tuple[Literal[True], None] | tuple[Literal[False], list]:
+        self, object: object, logger: Any
+    ) -> tuple[Literal[True], None] | tuple[Literal[False], List[jsonschema.ValidationError]]:
         """
         Validates a dictionary object against the JSONSchema.
 
@@ -99,7 +98,7 @@ class JSONSchema(BaseModel):
                 object is valid or not, and the second element is a list of errors found
                 in the object, or None if the object is valid.
         """
-        validator = Draft7Validator(self.to_dict())
+        validator = jsonschema.Draft7Validator(self.to_dict())
 
         if errors := sorted(validator.iter_errors(object), key=lambda e: e.path):
             return False, errors
