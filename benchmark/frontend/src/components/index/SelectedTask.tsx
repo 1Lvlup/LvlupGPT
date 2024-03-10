@@ -1,7 +1,5 @@
-import React, { useState } from "react";
-
+import React, { useState, useCallback } from "react";
 import tw from "tailwind-styled-components";
-
 import { TaskData } from "../../lib/types";
 import RunButton from "./RunButton";
 import MockCheckbox from "./MockCheckbox";
@@ -22,35 +20,36 @@ const SelectedTask: React.FC<SelectedTaskProps> = ({
   setIsMock,
   cutoff,
   setResponseData,
-  setAllResponseData,
   allResponseData,
+  setAllResponseData,
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const runTest = async () => {
-    // If there's no selected task, do nothing
-    if (!selectedTask?.name) return;
+  const runTest = useCallback(async () => {
+    if (!selectedTask) return;
 
     const testParam = selectedTask.name;
     setIsLoading(true);
     try {
       let url = `http://localhost:8000/run_single_test?test=${testParam}&mock=${isMock}`;
-      cutoff && !isMock && (url += `&cutoff=${cutoff}`);
+      if (cutoff !== null && !isMock) {
+        url += `&cutoff=${cutoff}`;
+      }
       const response = await fetch(url);
       const data = await response.json();
 
-      if (data["returncode"] > 0) {
-        throw new Error(data["stderr"]);
+      if (data.returncode > 0) {
+        throw new Error(data.stderr);
       } else {
-        const jsonObject = JSON.parse(data["stdout"]);
-        setAllResponseData([...allResponseData, jsonObject]);
+        const jsonObject = JSON.parse(data.stdout);
+        setAllResponseData((prevData) => [...prevData, jsonObject]);
         setResponseData(jsonObject);
       }
     } catch (error) {
       console.error("There was an error fetching the data", error);
     }
     setIsLoading(false);
-  };
+  }, [selectedTask, isMock, cutoff]);
 
   return (
     <>
@@ -73,13 +72,22 @@ const SelectedTask: React.FC<SelectedTaskProps> = ({
         isLoading={isLoading}
         testRun={runTest}
         isMock={isMock}
+        disabled={isLoading}
       />
-      <MockCheckbox isMock={isMock} setIsMock={setIsMock} />
+      <MockCheckboxInput
+        type="checkbox"
+        checked={isMock}
+        onChange={(event) => {
+          event.preventDefault();
+          setIsMock(event.target.checked);
+        }}
+      />
+      <CheckboxWrapper htmlFor="mock-checkbox">
+        Mock
+      </CheckboxWrapper>
     </>
   );
 };
-
-export default SelectedTask;
 
 const TaskName = tw.h1`
     font-bold
@@ -98,15 +106,4 @@ const Detail = tw.p`
 const MockCheckboxInput = tw.input`
     border 
     rounded 
-    focus:border-blue-400 
-    focus:ring 
-    focus:ring-blue-200 
-    focus:ring-opacity-50
-`;
-
-const CheckboxWrapper = tw.label`
-    flex 
-    items-center 
-    space-x-2 
-    mt-2
-`;
+    focus:border-blue
