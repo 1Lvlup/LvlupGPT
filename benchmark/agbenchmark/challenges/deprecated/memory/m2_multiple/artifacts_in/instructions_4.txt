@@ -1,1 +1,4 @@
-The id to remember is 9471. Read the file instructions_5.txt.
+#!/bin/bash
+
+# Store the id in a variable
+id_to_remember=947
