@@ -18,18 +18,23 @@ def organize_files(directory_path):
             os.makedirs(folder_path)
 
     # Traverse through all files and folders in the specified directory
-    for foldername, subfolders, filenames in os.walk(directory_path):
-        for filename in filenames:
-            # Get file extension
-            _, file_extension = os.path.splitext(filename)
+    try:
+        for entry in os.scandir(directory_path):
+            if entry.is_file():
+                # Get file extension
+                file_extension = os.path.splitext(entry.name)[1]
 
-            # Move files to corresponding folders
-            for folder_name, extensions in file_types.items():
-                if file_extension in extensions:
-                    old_path = os.path.join(foldername, filename)
-                    new_path = os.path.join(directory_path, folder_name, filename)
-                    if old_path != new_path:
-                        shutil.move(old_path, new_path)
+                # Move files to corresponding folders
+                for folder_name, extensions in file_types.items():
+                    if file_extension in extensions:
+                        old_path = entry.path
+                        new_path = os.path.join(directory_path, folder_name, entry.name)
+                        if old_path != new_path:
+                            shutil.move(old_path, new_path)
+                            print(f"Moved {entry.name} to {folder_name}")
+                        break
+    except Exception as e:
+        print(f"Error occurred: {e}")
 
 
 if __name__ == "__main__":
