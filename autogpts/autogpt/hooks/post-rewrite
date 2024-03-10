@@ -1,4 +1,30 @@
 #!/bin/sh
-case "$1" in
-    rebase) git submodule update --init --recursive ;;
+
+# Check if a command line argument is provided
+if [ -z "$1" ]; then
+  echo "Usage: $0 <command>"
+  exit 1
+fi
+
+# Set the command to lowercase for case-insensitive matching
+command="$1"
+command="${command,,}"
+
+# Define the submodule update command
+submodule_update_command='git submodule update --init --recursive'
+
+# Use a case statement to handle the command
+case "$command" in
+  rebase)
+    echo "Updating submodules recursively..."
+    eval "$submodule_update_command"
+    ;;
+  *)
+    echo "Unknown command: $command"
+    echo "Available commands: rebase"
+    exit 1
+    ;;
 esac
+
+# Exit with a success status
+exit 0
