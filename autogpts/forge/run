@@ -1,9 +1,29 @@
 #!/bin/bash
 
-kill $(lsof -t -i :8000)
-
-if [ ! -f .env ]; then
-  cp .env.example .env
-  echo "Please add your api keys to the .env file."
+# Stop the server if it's running on port 8000
+if pgrep -x "python" > /dev/null
+then
+    kill $(lsof -t -i :8000)
 fi
+
+# Check if .env file exists, if not create it with example content
+if [ ! -f .env ]; then
+  if [ -f .env.example ]; then
+    cp .env.example .env
+    echo "Please add your api keys to the .env file."
+  else
+    echo "Error: .env.example file not found."
+    exit 1
+  fi
+fi
+
+# Check if poetry is installed
+if ! command -v poetry &> /dev/null
+then
+    echo "Error: poetry not installed."
+    exit 1
+fi
+
+# Run the forge script using poetry
 poetry run python -m forge
+
