@@ -1,15 +1,21 @@
+numbers = [15, 112, 117, 204, 413, 2014, 3198, 4046, 7000, 11759, 21461, 24578, 31536, 53823, 81462]
+numbers.sort()
+for number in numbers:
+    print(number, "Millions")
+
+
 15 Millions
 112 Millions
 117 Millions
 204 Millions
 413 Millions
-2,014 Millions
-3,198 Millions
-4,046 Millions
-7,000 Millions
-11,759 Millions
-21,461 Millions
-24,578 Millions
-31,536 Millions
-53,823 Millions
-81,462 Millions
+2014 Millions
+3198 Millions
+4046 Millions
+7000 Millions
+11759 Millions
+21461 Millions
+24578 Millions
+31536 Millions
+53823 Millions
+81462 Millions
