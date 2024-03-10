@@ -1,5 +1,5 @@
 # This CITATION.cff file was generated with cffinit.
-# Visit https://bit.ly/cffinit to generate yours today!
+# Visit https://citationfile.org to generate yours today!
 
 cff-version: 1.2.0
 title: AutoGPT
@@ -8,14 +8,22 @@ message: >-
   metadata from this file.
 type: software
 authors:
-  - name: Significant Gravitas
-    website: 'https://agpt.co'
+  - family-names: Gravitas
+    given-names: Significant
+    orcid: 0000-0000-0000-0000  # replace with actual ORCID
+    affiliation: "AutoGPT Team"
+affiliations:
+  - id: affiliation1
+    name: AutoGPT Team
+    url: 'https://agpt.co'
 repository-code: 'https://github.com/Significant-Gravitas/AutoGPT'
 url: 'https://agpt.co'
-abstract: >-
+description: >-
   A collection of tools and experimental open-source attempts to make GPT-4 fully
   autonomous.
 keywords:
   - AI
   - Agent
-license: MIT
+license:
+  id: MIT
+  url: 'https://opensource.org/licenses/MIT'
