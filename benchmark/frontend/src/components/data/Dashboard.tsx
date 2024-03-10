@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import tw from "tailwind-styled-components";
+import tw, { TwStyle, CSSInterpolation } from "tailwind-styled-components";
 
 import RadarChart from "./dashboard/RadarChart";
 import CategorySuccess from "./dashboard/CategorySuccess";
@@ -27,19 +27,31 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
 
 export default Dashboard;
 
+interface CardWrapperProps {
+  css?: CSSInterpolation;
+}
+
 const DashboardContainer = tw.div`
   w-full
-  h-96
+  h-screen
   flex
-  justify-between
+  flex-wrap
+  justify-center
   items-center
-`;
+` as TwStyle<CardWrapperProps>;
 
-const CardWrapper = tw.div`
-  w-[30%]
-  h-72
-  rounded-xl
-  shadow-lg
-  border
-  p-4
-`;
+interface CardWrapperStyleProps {
+  width?: string;
+  height?: string;
+}
+
+const CardWrapperStyle: TwStyle<CardWrapperStyleProps> = {
+  width: "w-96",
+  height: "h-64",
+  rounded: "rounded-xl",
+  shadow: "shadow-lg",
+  border: "border",
+  padding: "p-4",
+};
+
+const CardWrapper = tw.div<CardWrapperStyleProps>(CardWrapperStyle)``;
