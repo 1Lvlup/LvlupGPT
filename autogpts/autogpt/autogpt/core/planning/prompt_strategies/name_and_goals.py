@@ -1,36 +1,37 @@
+import json
 import logging
+from dataclasses import dataclass, field
+from typing import Any, Dict, List
 
+import json_schema
 from autogpt.core.configuration import SystemConfiguration, UserConfigurable
 from autogpt.core.prompting import PromptStrategy
-from autogpt.core.prompting.schema import ChatPrompt, LanguageModelClassification
-from autogpt.core.prompting.utils import json_loads
-from autogpt.core.resource.model_providers import (
-    AssistantChatMessage,
-    ChatMessage,
-    CompletionModelFunction,
-)
+from autogpt.core.prompting.schema import ChatPrompt, ChatMessage, CompletionModelFunction
+from autogpt.core.resource.model_providers import AssistantChatMessage
 from autogpt.core.utils.json_schema import JSONSchema
 
 logger = logging.getLogger(__name__)
 
 
+@dataclass
 class NameAndGoalsConfiguration(SystemConfiguration):
     model_classification: LanguageModelClassification = UserConfigurable()
     system_prompt: str = UserConfigurable()
     user_prompt_template: str = UserConfigurable()
-    create_agent_function: dict = UserConfigurable()
+    create_agent_function: Dict[str, Any] = UserConfigurable(
+        field(default_factory=dict)
+    )
 
 
+@dataclass
 class NameAndGoals(PromptStrategy):
-    DEFAULT_SYSTEM_PROMPT = (
-        "Your job is to respond to a user-defined task, given in triple quotes, by "
-        "invoking the `create_agent` function to generate an autonomous agent to "
-        "complete the task. "
-        "You should supply a role-based name for the agent, "
-        "an informative description for what the agent does, and "
-        "1 to 5 goals that are optimally aligned with the successful completion of "
-        "its assigned task.\n"
-        "\n"
+    SYSTEM_PROMPT = (
+        "Your job is to respond to a user-defined task, given in triple quotes, "
+        "by invoking the `create_agent` function to generate an autonomous agent "
+        "to complete the task. You should supply a role-based name for the agent, "
+        "an informative description for what the agent does, and 1 to 5 goals that "
+        "are optimally aligned with the successful completion of its assigned task. "
+        "\n\n"
         "Example Input:\n"
         '"""Help me with marketing my business"""\n\n'
         "Example Function Call:\n"
@@ -49,9 +50,9 @@ class NameAndGoals(PromptStrategy):
         "remains on track.'])"
     )
 
-    DEFAULT_USER_PROMPT_TEMPLATE = '"""{user_objective}"""'
+    SYSTEM_PROMPT_TEMPLATE = '"""{user_objective}"""'
 
-    DEFAULT_CREATE_AGENT_FUNCTION = CompletionModelFunction(
+    CREATE_AGENT_FUNCTION_SCHEMA = CompletionModelFunction(
         name="create_agent",
         description="Create a new autonomous AI agent to complete a given task.",
         parameters={
@@ -67,8 +68,8 @@ class NameAndGoals(PromptStrategy):
             ),
             "agent_goals": JSONSchema(
                 type=JSONSchema.Type.ARRAY,
-                minItems=1,
-                maxItems=5,
+                min_items=1,
+                max_items=5,
                 items=JSONSchema(
                     type=JSONSchema.Type.STRING,
                 ),
@@ -82,11 +83,11 @@ class NameAndGoals(PromptStrategy):
         },
     )
 
-    default_configuration: NameAndGoalsConfiguration = NameAndGoalsConfiguration(
+    DEFAULT_CONFIGURATION: NameAndGoalsConfiguration = NameAndGoalsConfiguration(
         model_classification=LanguageModelClassification.SMART_MODEL,
-        system_prompt=DEFAULT_SYSTEM_PROMPT,
-        user_prompt_template=DEFAULT_USER_PROMPT_TEMPLATE,
-        create_agent_function=DEFAULT_CREATE_AGENT_FUNCTION.schema,
+        system_prompt=SYSTEM_PROMPT,
+        user_prompt_template=SYSTEM_PROMPT_TEMPLATE,
+        create_agent_function=CREATE_AGENT_FUNCTION_SCHEMA.schema,
     )
 
     def __init__(
@@ -94,7 +95,7 @@ class NameAndGoals(PromptStrategy):
         model_classification: LanguageModelClassification,
         system_prompt: str,
         user_prompt_template: str,
-        create_agent_function: dict,
+        create_agent_function: Dict[str, Any],
     ):
         self._model_classification = model_classification
         self._system_prompt_message = system_prompt
@@ -117,7 +118,6 @@ class NameAndGoals(PromptStrategy):
         prompt = ChatPrompt(
             messages=[system_message, user_message],
             functions=[self._create_agent_function],
-            # TODO
             tokens_used=0,
         )
         return prompt
@@ -141,10 +141,5 @@ class NameAndGoals(PromptStrategy):
                     f"LLM did not call {self._create_agent_function} function; "
                     "agent profile creation failed"
                 )
-            parsed_response = json_loads(
-                response_content.tool_calls[0].function.arguments
-            )
-        except KeyError:
-            logger.debug(f"Failed to parse this response content: {response_content}")
-            raise
-        return parsed_response
+            parsed_response = json.loads(
+
