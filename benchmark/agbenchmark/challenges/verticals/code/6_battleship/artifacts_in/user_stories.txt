@@ -1,31 +1,49 @@
-Setup and Start
+# Game: Battleship
 
-As a player, I want to start a new game so I can compete against my opponent.
-As a player, I want to position my ships on a 10x10 grid so that I can set up my strategy.
-As a player, I want to rotate my ships horizontally or vertically so I can choose their orientation.
-As a player, I want to be ensured that ships do not overlap when placing them so that the game rules are maintained.
-As a player, I want to hide my ship placements from my opponent so that my strategy remains a secret.
+## Overview
 
-Gameplay
+Battleship is a two-player game where each player has a 10x10 grid with ships hidden from their opponent. The goal is to sink all of the opponent's ships before they sink yours.
 
-As a player, I want to call out a grid square during my turn so I can try to hit my opponent's ships.
-As a player, when I successfully hit a ship, I want to take another turn immediately so I can capitalize on my successful guess.
-As a player, when it's not my turn, I want to respond if the grid square called by my opponent is a "hit" or "miss" so that the game progresses.
-As a player, I want feedback on whether my guess was a "hit" or "miss" so that I can adjust my strategy.
-As a player, when my ship is completely hit, I want to inform my opponent which of my ships they have sunk, so they know their progress.
-As a player, I want to keep track of my hits and misses so I can strategize my future moves.
+## Features
 
-Endgame
+### Setup and Start
 
-As a player, I want to be notified when all my ships have been sunk so I know I've lost.
-As a player, I want to be notified when I have sunk all my opponent's ships so I know I've won.
-As a player, I want to have the option to start a new game after one ends so I can play again.
+- As a player, I want to start a new game so I can compete against my opponent.
+  - The game should initialize two 10x10 grids, one for each player.
+  - The game should prompt each player to place their ships on their grid.
 
-User Experience
+- As a player, I want to position my ships on a 10x10 grid so that I can set up my strategy.
+  - The game should provide a 10x10 grid for each player.
+  - The game should allow each player to place their ships on their grid.
 
-As a player, I want clear visuals of my grid and my opponent's grid (with hits and misses) so I can easily understand the game state.
-As a player, I want audible feedback (like a splash or explosion) so that hits and misses are more engaging.
-As a player, I want to be able to pause or exit the game if needed so that I can resume or quit as per my convenience.
+- As a player, I want to rotate my ships horizontally or vertically so I can choose their orientation.
+  - The game should allow each player to rotate their ships before placing them on the grid.
 
-Not Allowed
-As a player, I shouldn't be able to start hitting ships until all the ships are placed
+- As a player, I want to be ensured that ships do not overlap when placing them so that the game rules are maintained.
+  - The game should check for overlapping ships and prevent placement if they overlap.
+
+- As a player, I want to hide my ship placements from my opponent so that my strategy remains a secret.
+  - The game should hide each player's grid from their opponent.
+
+### Gameplay
+
+- As a player, I want to call out a grid square during my turn so I can try to hit my opponent's ships.
+  - The game should allow each player to call out a grid square during their turn.
+
+- As a player, when I successfully hit a ship, I want to take another turn immediately so I can capitalize on my successful guess.
+  - The game should allow the player to take another turn immediately after hitting a ship.
+
+- As a player, when it's not my turn, I want to respond if the grid square called by my opponent is a "hit" or "miss" so that the game progresses.
+  - The game should display a "hit" or "miss" to the opponent when it's not their turn.
+
+- As a player, I want feedback on whether my guess was a "hit" or "miss" so that I can adjust my strategy.
+  - The game should display a "hit" or "miss" to the player after each guess.
+
+- As a player, when my ship is completely hit, I want to inform my opponent which of my ships they have sunk, so they know their progress.
+  - The game should inform the opponent when a player's ship is completely hit.
+
+- As a player, I want to keep track of my hits and misses so I can strategize my future moves.
+  - The game should keep track of each player's hits and misses.
+
+### Endgame
+
