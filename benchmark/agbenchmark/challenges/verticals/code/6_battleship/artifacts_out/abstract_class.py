@@ -1,13 +1,24 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import (
+    Any,
+    ClassVar,
+    Dict,
+    Final,
+    List,
+    Optional,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from pydantic import BaseModel, validator
 
+T = TypeVar("T")
 
-# Models for the request and response payloads
+
 class ShipPlacement(BaseModel):
     ship_type: str
-    start: dict  # {"row": int, "column": str}
+    start: Dict[str, int]  # {"row": int, "column": int}
     direction: str
 
     @validator("start")
@@ -17,19 +28,19 @@ class ShipPlacement(BaseModel):
         if not (1 <= row <= 10):
             raise ValueError("Row must be between 1 and 10 inclusive.")
 
-        if column not in list("ABCDEFGHIJ"):
-            raise ValueError("Column must be one of A, B, C, D, E, F, G, H, I, J.")
+        if not (1 <= column <= 10):
+            raise ValueError("Column must be between 1 and 10 inclusive.")
 
         return start
 
 
 class Turn(BaseModel):
-    target: dict  # {"row": int, "column": str}
+    target: Dict[str, int]  # {"row": int, "column": int}
 
 
 class TurnResponse(BaseModel):
     result: str
-    ship_type: Optional[str]  # This would be None if the result is a miss
+    ship_type: Optional[str]
 
 
 class GameStatus(BaseModel):
@@ -37,19 +48,16 @@ class GameStatus(BaseModel):
     winner: Optional[str]
 
 
-from typing import List
-
-
 class Game(BaseModel):
     game_id: str
     players: List[str]
-    board: dict  # This could represent the state of the game board, you might need to flesh this out further
-    ships: List[ShipPlacement]  # List of ship placements for this game
-    turns: List[Turn]  # List of turns that have been taken
+    board: Dict[str, str]  # This could represent the state of the game board, you might need to flesh this out further
+    ships: List[ShipPlacement]
+    turns: List[Turn]
 
 
 class AbstractBattleship(ABC):
-    SHIP_LENGTHS = {
+    SHIP_LENGTHS: ClassVar[Final[Dict[str, int]]] = {
         "carrier": 5,
         "battleship": 4,
         "cruiser": 3,
@@ -57,51 +65,52 @@ class AbstractBattleship(ABC):
         "destroyer": 2,
     }
 
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        super().__init_subclass__(**kwargs)
+
+        for method_name in (
+            "create_ship_placement",
+            "create_turn",
+            "get_game_status",
+            "get_winner",
+            "get_game",
+            "delete_game",
+            "create_game",
+        ):
+            method = getattr(cls, method_name, None)
+            if not isinstance(method, (classmethod, abstractmethod)):
+                raise NotImplementedError(f"{method_name} must be implemented.")
+
     @abstractmethod
     def create_ship_placement(self, game_id: str, placement: ShipPlacement) -> None:
-        """
-        Place a ship on the grid.
-        """
         pass
 
     @abstractmethod
     def create_turn(self, game_id: str, turn: Turn) -> TurnResponse:
-        """
-        Players take turns to target a grid cell.
-        """
         pass
 
+    @property
     @abstractmethod
-    def get_game_status(self, game_id: str) -> GameStatus:
-        """
-        Check if the game is over and get the winner if there's one.
-        """
+    def game_status(self) -> GameStatus:
         pass
 
     @abstractmethod
     def get_winner(self, game_id: str) -> str:
-        """
-        Get the winner of the game.
-        """
         pass
 
+    @property
     @abstractmethod
-    def get_game(self) -> Game:
-        """
-        Retrieve the state of the game.
-        """
+    def game(self) -> Game:
         pass
 
     @abstractmethod
     def delete_game(self, game_id: str) -> None:
-        """
-        Delete a game given its ID.
-        """
         pass
 
+    @classmethod
     @abstractmethod
-    def create_game(self) -> None:
-        """
-        Create a new game.
-        """
+    def create_game(cls: Type[T], *args: Any, **kwargs: Any) -> T:
         pass
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}
