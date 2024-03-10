@@ -1,1 +1,7 @@
-81,462 Millions
+number = 81_462_000_000
+
+# Formatting the number with commas as thousand separators
+formatted_number = format(number, ',')
+
+# Printing the number
+print(f'{formatted_number} Millions')
