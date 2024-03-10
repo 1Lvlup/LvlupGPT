@@ -1,13 +1,22 @@
+from typing import Any, Callable, List, TypeVar, Union
+from pydantic import BaseModel, Field, ValidationError
+from pydantic.json import pydantic_encoder
+from typing_extensions import overload
+
+
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Any, Callable, List, TypeVar, Union
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, Field, ValidationError, validator
+from pydantic.json import pydantic_encoder
+from typing_extensions import overload
+
+T = TypeVar("T")
 
 
-# Models for the request and response payloads
 class ShipPlacement(BaseModel):
     ship_type: str
-    start: dict  # {"row": int, "column": str}
+    start: dict = Field(default_factory=lambda: {"row": 0, "column": "A"})  # {"row": int, "column": str}
     direction: str
 
     @validator("start")
@@ -24,12 +33,12 @@ class ShipPlacement(BaseModel):
 
 
 class Turn(BaseModel):
-    target: dict  # {"row": int, "column": str}
+    target: dict = Field(default_factory=lambda: {"row": 0, "column": "A"})  # {"row": int, "column": str}
 
 
 class TurnResponse(BaseModel):
     result: str
-    ship_type: Optional[str]  # This would be None if the result is a miss
+    ship_type: Optional[str] = None  # This would be None if the result is a miss
 
 
 class GameStatus(BaseModel):
@@ -37,71 +46,46 @@ class GameStatus(BaseModel):
     winner: Optional[str]
 
 
-from typing import List
-
-
 class Game(BaseModel):
     game_id: str
     players: List[str]
-    board: dict  # This could represent the state of the game board, you might need to flesh this out further
-    ships: List[ShipPlacement]  # List of ship placements for this game
-    turns: List[Turn]  # List of turns that have been taken
+    board: dict = {}  # This could represent the state of the game board, you might need to flesh this out further
+    ships: List[ShipPlacement] = []  # List of ship placements for this game
+    turns: List[Turn] = []  # List of turns that have been taken
 
+    def __getitem__(self, item: str) -> Any:
+        return getattr(self, item)
 
-class AbstractBattleship(ABC):
-    SHIP_LENGTHS = {
-        "carrier": 5,
-        "battleship": 4,
-        "cruiser": 3,
-        "submarine": 3,
-        "destroyer": 2,
-    }
+    def __setitem__(self, key: str, value: Any) -> None:
+        setattr(self, key, value)
 
-    @abstractmethod
-    def create_ship_placement(self, game_id: str, placement: ShipPlacement) -> None:
-        """
-        Place a ship on the grid.
-        """
-        pass
+    @overload
+    @classmethod
+    def create_ship_placement(cls, game_id: str, placement: ShipPlacement) -> None:
+        ...
 
-    @abstractmethod
-    def create_turn(self, game_id: str, turn: Turn) -> TurnResponse:
-        """
-        Players take turns to target a grid cell.
-        """
-        pass
+    @overload
+    @classmethod
+    def create_ship_placement(cls, game_id: str, placement: dict) -> None:
+        ...
 
-    @abstractmethod
-    def get_game_status(self, game_id: str) -> GameStatus:
-        """
-        Check if the game is over and get the winner if there's one.
-        """
-        pass
+    @classmethod
+    def create_ship_placement(cls, game_id: str, placement: Union[ShipPlacement, dict]) -> None:
+        if isinstance(placement, dict):
+            placement = ShipPlacement(**placement)
+        # Place a ship on the grid
 
-    @abstractmethod
-    def get_winner(self, game_id: str) -> str:
-        """
-        Get the winner of the game.
-        """
-        pass
+    @overload
+    @classmethod
+    def create_turn(cls, game_id: str, turn: Turn) -> TurnResponse:
+        ...
 
-    @abstractmethod
-    def get_game(self) -> Game:
-        """
-        Retrieve the state of the game.
-        """
-        pass
+    @overload
+    @classmethod
+    def create_turn(cls, game_id: str, turn: dict) -> TurnResponse:
+        ...
 
-    @abstractmethod
-    def delete_game(self, game_id: str) -> None:
-        """
-        Delete a game given its ID.
-        """
-        pass
-
-    @abstractmethod
-    def create_game(self) -> None:
-        """
-        Create a new game.
-        """
-        pass
+    @classmethod
+    def create_turn(cls, game_id: str, turn: Union[Turn, dict]) -> TurnResponse:
+        if isinstance(turn, dict):
+            turn = Turn
