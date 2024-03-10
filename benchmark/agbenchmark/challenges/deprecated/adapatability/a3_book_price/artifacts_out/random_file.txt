@@ -1,1 +1,18 @@
-25.89
+result = 10.56 + 25.89
+print(result)
+
+
+# Set the first number
+num1 = 10.56
+
+# Set the second number
+num2 = 25.89
+
+# Calculate the sum of the two numbers
+result = num1 + num2
+
+# Round the result to two decimal places
+result = round(result, 2)
+
+# Print the result
+print(result)
