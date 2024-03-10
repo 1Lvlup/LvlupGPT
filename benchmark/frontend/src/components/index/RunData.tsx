@@ -2,11 +2,19 @@ import React, { useState } from "react";
 import { LatestRun } from "../../lib/types";
 import tw from "tailwind-styled-components";
 
-const RecursiveDropdown: React.FC<{ data: any; skipKeys: string[] }> = ({
+type RecursiveDropdownProps = {
+  data: any;
+  skipKeys: string[];
+};
+
+const isObject = (value: any): value is object =>
+  value !== null && typeof value === "object";
+
+const RecursiveDropdown: React.FC<RecursiveDropdownProps> = ({
   data,
   skipKeys,
 }) => {
-  if (typeof data !== "object" || data === null) {
+  if (data === null || typeof data !== "object") {
     return null;
   }
 
@@ -17,42 +25,44 @@ const RecursiveDropdown: React.FC<{ data: any; skipKeys: string[] }> = ({
           return null;
         }
 
-        // Special case for 'category' key
-        if (key === "category" && Array.isArray(value)) {
-          return (
-            <Section key={key}>
-              <Label>{key}:</Label>
-              <Data>{value.join(", ")}</Data>
-            </Section>
-          );
+        if (Array.isArray(value) && value.length === 0) {
+          return null;
         }
 
-        if (typeof value === "object" && value !== null) {
+        if (isObject(value)) {
           return (
             <Dropdown key={key}>
-              <DropdownSummary>{key}</DropdownSummary>
+              <DropdownSummary aria-label={`Expand ${key}`}>
+                {key}
+                <DropdownArrow />
+              </DropdownSummary>
               <DropdownContent>
                 <RecursiveDropdown data={value} skipKeys={skipKeys} />
               </DropdownContent>
             </Dropdown>
           );
-        } else {
-          return (
-            <Section key={key}>
-              <Label>{key}:</Label>
-              <Data>
-                {typeof value === "string" ? value : JSON.stringify(value)}
-              </Data>
-            </Section>
-          );
         }
+
+        return (
+          <Section key={key}>
+            <Label>{key}:</Label>
+            <Data>
+              {typeof value === "string" ? value : JSON.stringify(value)}
+            </Data>
+          </Section>
+        );
       })}
     </>
   );
 };
 
-const RunData: React.FC<{ latestRun: LatestRun }> = ({ latestRun }) => {
+type RunDataProps = {
+  latestRun: LatestRun;
+};
+
+const RunData: React.FC<RunDataProps> = ({ latestRun }) => {
   const date = new Date(latestRun.benchmark_start_time);
+
   return (
     <Card>
       <Section>
@@ -76,7 +86,10 @@ const RunData: React.FC<{ latestRun: LatestRun }> = ({ latestRun }) => {
 
       {Object.keys(latestRun.tests).map((testKey) => (
         <Dropdown key={testKey}>
-          <DropdownSummary>{testKey}</DropdownSummary>
+          <DropdownSummary aria-label={`Expand ${testKey}`}>
+            {testKey}
+            <DropdownArrow />
+          </DropdownSummary>
           <DropdownContent>
             {latestRun.tests[testKey] && (
               <RecursiveDropdown
@@ -90,8 +103,6 @@ const RunData: React.FC<{ latestRun: LatestRun }> = ({ latestRun }) => {
     </Card>
   );
 };
-
-export default RunData;
 
 const Card = tw.div`
   bg-white
@@ -123,7 +134,16 @@ const DropdownSummary = tw.summary`
   text-blue-500
 `;
 
-const DropdownContent = tw.div`
-  pl-4
-  mt-2
-`;
+const DropdownArrow = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    className="inline-block w-4 h-4 ml-2 transform -rotate-90"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+     
