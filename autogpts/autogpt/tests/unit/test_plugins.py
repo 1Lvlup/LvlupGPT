@@ -1,7 +1,8 @@
 import os
+import zipfile
 
+import pytest
 import yaml
-
 from autogpt.config.config import Config
 from autogpt.plugins import inspect_zip_for_modules, scan_plugins
 from autogpt.plugins.plugin_config import PluginConfig
@@ -13,7 +14,12 @@ PLUGIN_TEST_INIT_PY = "Auto-GPT-Plugin-Test-master/src/auto_gpt_vicuna/__init__.
 PLUGIN_TEST_OPENAI = "https://weathergpt.vercel.app/"
 
 
-def test_scan_plugins_openai(config: Config):
+@pytest.fixture
+def config():
+    return Config()
+
+
+def test_scan_plugins_openai(config):
     config.plugins_openai = [PLUGIN_TEST_OPENAI]
     plugins_config = config.plugins_config
     plugins_config.plugins[PLUGIN_TEST_OPENAI] = PluginConfig(
@@ -25,7 +31,7 @@ def test_scan_plugins_openai(config: Config):
     assert len(result) == 1
 
 
-def test_scan_plugins_generic(config: Config):
+def test_scan_plugins_generic(config):
     # Test that the function returns the correct number of plugins
     plugins_config = config.plugins_config
     plugins_config.plugins["auto_gpt_guanaco"] = PluginConfig(
@@ -42,14 +48,14 @@ def test_scan_plugins_generic(config: Config):
     assert "AutoGPTPVicuna" in plugin_class_names
 
 
-def test_scan_plugins_not_enabled(config: Config):
+def test_scan_plugins_not_enabled(config):
     # Test that the function returns the correct number of plugins
     plugins_config = config.plugins_config
     plugins_config.plugins["auto_gpt_guanaco"] = PluginConfig(
         name="auto_gpt_guanaco", enabled=True
     )
     plugins_config.plugins["auto_gpt_vicuna"] = PluginConfig(
-        name="auto_gptp_vicuna", enabled=False
+        name="auto_gpt_vicuna", enabled=False
     )
     result = scan_plugins(config)
     plugin_class_names = [plugin.__class__.__name__ for plugin in result]
@@ -60,11 +66,12 @@ def test_scan_plugins_not_enabled(config: Config):
 
 
 def test_inspect_zip_for_modules():
-    result = inspect_zip_for_modules(str(f"{PLUGINS_TEST_DIR}/{PLUGIN_TEST_ZIP_FILE}"))
+    with zipfile.ZipFile(os.path.join(PLUGINS_TEST_DIR, PLUGIN_TEST_ZIP_FILE), "r") as zip_ref:
+        result = inspect_zip_for_modules(zip_ref)
     assert result == [PLUGIN_TEST_INIT_PY]
 
 
-def test_create_base_config(config: Config):
+def test_create_base_config(config):
     """
     Test the backwards-compatibility shim to convert old plugin allow/deny list
     to a config file.
@@ -98,7 +105,7 @@ def test_create_base_config(config: Config):
     }
 
 
-def test_load_config(config: Config):
+def test_load_config(config):
     """
     Test that the plugin config is loaded correctly from the plugins_config.yaml file.
     """
@@ -108,7 +115,7 @@ def test_load_config(config: Config):
         "b": {"enabled": False, "config": {}},
     }
     with open(config.plugins_config_file, "w+") as f:
-        f.write(yaml.dump(test_config))
+        yaml.dump(test_config, f)
 
     # Load the config from disk
     plugins_config = PluginsConfig.load_config(
