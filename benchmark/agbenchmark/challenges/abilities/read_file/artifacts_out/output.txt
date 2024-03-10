@@ -1,1 +1,17 @@
-Hello World!
+import time
+from IPython.display import clear_output, HTML, display, Color
+def print_spin(text, delay=0.1):
+    animation = ["|", "/", "-", "\\"]
+    for char in text:
+        print(char, end="\r")
+        time.sleep(delay)
+    for i in range(100):
+        print(animation[i % len(animation)], end="\r")
+        time.sleep(delay)
+    print("")
+
+def print_color(text, color="green"):
+    print(Color.font(color, text))
+
+print_spin("Hello World! ")
+print_color("Hello World! ", "red")
