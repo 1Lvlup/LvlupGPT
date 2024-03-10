@@ -1,1 +1,8 @@
-1861.55
+# Given floating-point number
+num = 1861.55
+
+# Calculate the square of the number
+square = num ** 2
+
+# Print the result with proper formatting
+print(f"The square of {num:.2f} is {square:.2f}")
