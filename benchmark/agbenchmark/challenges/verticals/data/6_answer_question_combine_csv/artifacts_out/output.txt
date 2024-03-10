@@ -1,1 +1,8 @@
-1861.55
+# Get user input
+num = float(input("Enter a number: "))
+
+# Calculate the square
+square = num ** 2
+
+# Print the result with proper formatting
+print(f"The square of {num:.2f} is {square:.2f}.")
