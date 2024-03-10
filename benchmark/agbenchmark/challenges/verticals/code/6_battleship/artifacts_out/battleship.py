@@ -1,14 +1,24 @@
-from typing import Dict
+from typing import Dict, NamedTuple, Optional
 
 from abstract_class import (AbstractBattleship, Game, GameStatus,
                             ShipPlacement, Turn, TurnResponse)
 
+class ShipPosition(NamedTuple):
+    row: int
+    col: int
 
 class Battleship(AbstractBattleship):
     def __init__(self):
-        self.games: Dict[int, Game] = {}
+        self.games: Dict[str, Game] = {}
+        self.SHIP_LENGTHS = {
+            "carrier": 5,
+            "battleship": 4,
+            "cruiser": 3,
+            "submarine": 3,
+            "destroyer": 2,
+        }
 
-    def create_game(self) -> int:
+    def create_game(self) -> str:
         game_id = str(len(self.games))
         new_game = Game(
             game_id=game_id,
@@ -26,8 +36,10 @@ class Battleship(AbstractBattleship):
 
         if not game:
             raise ValueError(f"Game with ID {game_id} not found.")
+
         if placement.direction not in ["horizontal", "vertical"]:
             raise ValueError("Invalid ship direction")
+
         if self.all_ships_placed(game):
             raise ValueError("All ships are already placed. Cannot place more ships.")
 
@@ -35,33 +47,12 @@ class Battleship(AbstractBattleship):
         if not ship_length:
             raise ValueError(f"Invalid ship type {placement.ship_type}")
 
-        start_row, start_col = placement.start["row"], ord(
-            placement.start["column"]
-        ) - ord("A")
+        start_pos = ShipPosition(*placement.start)
 
-        if start_row < 1 or start_row > 10 or start_col < 0 or start_col > 9:
-            raise ValueError("Placement out of bounds")
+        if not self.is_valid_placement(game, start_pos, ship_length, placement.direction):
+            raise ValueError("Placement out of bounds or overlapping with another ship")
 
-        if placement.direction == "horizontal" and start_col + ship_length > 10:
-            raise ValueError("Ship extends beyond board boundaries")
-        elif placement.direction == "vertical" and start_row + ship_length > 10:
-            raise ValueError("Ship extends beyond board boundaries")
-
-        for i in range(ship_length):
-            if placement.direction == "horizontal":
-                if game.board.get((start_row, start_col + i)):
-                    raise ValueError("Ship overlaps with another ship!")
-            elif placement.direction == "vertical":
-                if game.board.get((start_row + i, start_col)):
-                    raise ValueError("Ship overlaps with another ship!")
-
-        for i in range(ship_length):
-            if placement.direction == "horizontal":
-                game.board[(start_row, start_col + i)] = placement.ship_type
-            else:
-                game.board[(start_row + i, start_col)] = placement.ship_type
-
-        game.ships.append(placement)
+        self.place_ship(game, start_pos, ship_length, placement.direction, placement.ship_type)
 
     def create_turn(self, game_id: str, turn: Turn) -> TurnResponse:
         game = self.games.get(game_id)
@@ -72,10 +63,8 @@ class Battleship(AbstractBattleship):
         if not self.all_ships_placed(game):
             raise ValueError("All ships must be placed before starting turns")
 
-        target_row, target_col = turn.target["row"], ord(turn.target["column"]) - ord(
-            "A"
-        )
-        hit_ship = game.board.get((target_row, target_col))
+        target_pos = ShipPosition(int(turn.target["row"]), ord(turn.target["column"]) - ord("A"))
+        hit_ship = game.board.get(target_pos)
 
         game.turns.append(turn)
 
@@ -84,33 +73,12 @@ class Battleship(AbstractBattleship):
 
         if hit_ship:
             ship_placement = next(sp for sp in game.ships if sp.ship_type == hit_ship)
+            self.mark_ship_hit(game, target_pos, ship_placement)
 
-        if hit_ship:
-            ship_placement = next(sp for sp in game.ships if sp.ship_type == hit_ship)
-            start_row, start_col = ship_placement.start["row"], ord(
-                ship_placement.start["column"]
-            ) - ord("A")
-            ship_positions = [
-                (
-                    start_row + (i if ship_placement.direction == "vertical" else 0),
-                    start_col + (i if ship_placement.direction == "horizontal" else 0),
-                )
-                for i in range(self.SHIP_LENGTHS[hit_ship])
-            ]
-
-            targeted_positions = {
-                (t.target["row"], ord(t.target["column"]) - ord("A"))
-                for t in game.turns
-            }
-
-            game.board[(target_row, target_col)] = "hit"
-
-            if set(ship_positions).issubset(targeted_positions):
-                for pos in ship_positions:
-                    game.board[pos] = "hit"
+            if self.is_ship_sunk(game, ship_placement):
                 return TurnResponse(result="sunk", ship_type=hit_ship)
-            else:
-                return TurnResponse(result="hit", ship_type=hit_ship)
+
+        return TurnResponse(result="hit", ship_type=hit_ship)
 
     def get_game_status(self, game_id: str) -> GameStatus:
         game = self.games.get(game_id)
@@ -129,7 +97,7 @@ class Battleship(AbstractBattleship):
         else:
             return GameStatus(is_game_over=False, winner=None)
 
-    def get_winner(self, game_id: str) -> str:
+    def get_winner(self, game_id: str) -> Optional[str]:
         game_status = self.get_game_status(game_id)
 
         if game_status.is_game_over:
@@ -137,7 +105,7 @@ class Battleship(AbstractBattleship):
         else:
             return None
 
-    def get_game(self, game_id: str) -> Game:
+    def get_game(self, game_id: str) -> Optional[Game]:
         return self.games.get(game_id)
 
     def delete_game(self, game_id: str) -> None:
@@ -147,3 +115,19 @@ class Battleship(AbstractBattleship):
     def all_ships_placed(self, game: Game) -> bool:
         placed_ship_types = set([placement.ship_type for placement in game.ships])
         return placed_ship_types == set(self.SHIP_LENGTHS.keys())
+
+    def is_valid_placement(self, game: Game, start_pos: ShipPosition, length: int, direction: str) -> bool:
+        if direction == "horizontal":
+            return (start_pos.col + length - 1) <= 10 and all(
+                (row, col) not in game.board for row, col in zip(range(start_pos.row, start_pos.row + length), range(start_pos.col, start_pos.col + length))
+            )
+        else:
+            return (start_pos.row + length - 1) <= 10 and all(
+                (row, col) not in game.board for row, col in zip(range(start_pos.row, start_pos.row + length), range(start_pos.col, start_pos.col + length))
+            )
+
+    def place_ship(self, game: Game, start_pos: ShipPosition, length: int, direction: str, ship_type: str) -> None:
+        if direction == "horizontal":
+            for col in range(start_pos.col, start_pos.col + length):
+                game.board[(start_pos.row, col)] = ship_type
+                game
