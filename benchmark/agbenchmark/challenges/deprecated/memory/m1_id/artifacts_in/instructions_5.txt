@@ -1,1 +1,7 @@
-Write the id previously mentioned to a file called result.txt.
+# Assume the id variable has already been defined
+
+# Open the file in write mode
+with open("result.txt", "w") as file:
+    # Write the id to the file
+    file.write(str(id))
+
