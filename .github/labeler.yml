@@ -1,23 +1,24 @@
-AutoGPT Agent:
-- changed-files:
-  - any-glob-to-any-file: autogpts/autogpt/**
+projects:
+  - name: AutoGPT
+    changed_files:
+      - glob: "autogpts/autogpt/**"
 
-Forge:
-- changed-files:
-  - any-glob-to-any-file: autogpts/forge/**
+  - name: Forge
+    changed_files:
+      - glob: "autogpts/forge/**"
 
-Benchmark:
-- changed-files:
-  - any-glob-to-any-file: benchmark/**
+  - name: Benchmark
+    changed_files:
+      - glob: "benchmark/**"
 
-Frontend:
-- changed-files:
-  - any-glob-to-any-file: frontend/**
+  - name: Frontend
+    changed_files:
+      - glob: "frontend/**"
 
-Arena:
-- changed-files:
-  - any-glob-to-any-file: arena/**
+  - name: Arena
+    changed_files:
+      - glob: "arena/**"
 
-documentation:
-- changed-files:
-  - any-glob-to-any-file: docs/**
+  - name: Documentation
+    changed_files:
+      - glob: "docs/**"
