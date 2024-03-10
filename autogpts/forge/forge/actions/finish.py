@@ -1,5 +1,8 @@
-from forge.sdk.forge_log import ForgeLogger
+"""
+A module for the 'finish' action.
+"""
 
+from forge.sdk.forge_log import ForgeLogger
 from .registry import action
 
 logger = ForgeLogger(__name__)
@@ -18,21 +21,25 @@ logger = ForgeLogger(__name__)
             "required": True,
         }
     ],
-    output_type="None",
+    output_type="str",
 )
 async def finish(
-    agent,
+    agent: any,
     task_id: str,
     reason: str,
 ) -> str:
     """
-    A function that takes in a string and exits the program
+    A function that takes in a string and exits the program.
 
     Parameters:
+        agent (any): The agent object.
+        task_id (str): The ID of the task.
         reason (str): A summary to the user of how the goals were accomplished.
+
     Returns:
-        A result string from create chat completion. A list of suggestions to
-            improve the code.
+        A result string from create chat completion. It is recommended to return a more informative result string,
+        such as "Task '{task\_id}' has been finished with reason '{reason}'.".
     """
     logger.info(reason, extra={"title": "Shutting down...\n"})
-    return reason
+    return f"Task '{task_id}' has been finished with reason '{reason}'."
+
