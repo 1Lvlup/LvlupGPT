@@ -1,1 +1,1 @@
-Goodbye
+print("Goodbye! It was nice working with you.")
