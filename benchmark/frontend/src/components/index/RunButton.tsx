@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-
 import tw from "tailwind-styled-components";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleNotch } from "@fortawesome/free-solid-svg-icons";
@@ -8,16 +7,16 @@ interface RunButtonProps {
   testRun: () => Promise<void>;
   isLoading: boolean;
   cutoff?: string;
-  isMock: boolean;
+  isMock?: boolean;
 }
 
 const RunButton: React.FC<RunButtonProps> = ({
   testRun,
   isLoading,
   cutoff,
-  isMock,
+  isMock = false,
 }) => {
-  const intCutoff = cutoff ? parseInt(cutoff) : null;
+  const intCutoff = cutoff ? parseInt(cutoff, 10) : null;
   const [timeElapsed, setTimeElapsed] = useState<number>(0);
 
   useEffect(() => {
@@ -45,7 +44,7 @@ const RunButton: React.FC<RunButtonProps> = ({
 
   return (
     <>
-      <RunButtonWrapper onClick={testRun}>
+      <RunButtonWrapper onClick={testRun} disabled={isLoading}>
         {!isLoading ? (
           "Run Task"
         ) : (
@@ -53,13 +52,13 @@ const RunButton: React.FC<RunButtonProps> = ({
         )}
       </RunButtonWrapper>
       {cutoff && isLoading && (
-        <>
+        <p>
           {isMock ? (
-            <p>Time elapsed: {timeElapsed} seconds</p>
+            <>Time elapsed: {timeElapsed} seconds</>
           ) : (
-            <p>Time until cutoff: {timeUntilCutoff} seconds</p>
+            <>Time until cutoff: {timeUntilCutoff} seconds</>
           )}
-        </>
+        </p>
       )}
     </>
   );
@@ -77,4 +76,8 @@ const RunButtonWrapper = tw.button`
     flex
     items-center
     justify-center
+    opacity-100
+    cursor-pointer
+    disabled:opacity-50
+    disabled:cursor-not-allowed
 `;
