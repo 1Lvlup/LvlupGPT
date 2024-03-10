@@ -1,10 +1,17 @@
-""" Constants for this module. """
+"""Module constants for test markers."""
 
-# The name of the marker used
+# Marker name
 MARKER_NAME = "depends"
 
-# The name of the keyword argument for the marker that contains custom name(s) for the tests
-MARKER_KWARG_ID = "name"
+# Keyword arguments for the marker
+MARKER_KWARGS = {
+    "names": "Custom names for the tests",
+    "depends_on": "Tests to depend on"
+}
 
-# The name of the keyword argument for the marker that specifies the tests to depend on
-MARKER_KWARG_DEPENDENCIES = "on"
+# Default value for the 'names' keyword argument
+MARKER_KWARG_DEFAULT_NAME = "test"
+
+# Default value for the 'depends_on' keyword argument
+MARKER_KWARG_DEFAULT_DEPENDENCIES = ()
+
