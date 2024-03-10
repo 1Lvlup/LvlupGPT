@@ -1,1 +1,11 @@
-Tea
+def serve_tea():
+    response = input("Would you like some tea? (yes/no) ").lower()
+    if response == "yes":
+        print("Here is your tea!")
+    elif response == "no":
+        print("No problem, I'll just put the kettle away.")
+    else:
+        print("I'm sorry, I didn't understand your response. Please answer with 'yes' or 'no'.")
+        serve_tea()
+
+serve_tea()
