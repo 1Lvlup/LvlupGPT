@@ -1,6 +1,16 @@
 # Netlify config for AutoGPT docs
 
+# Build settings
 [build]
-  publish = "public/"
-  command = "mkdocs build -d public"
-  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF docs mkdocs.yml CONTRIBUTING.md CODE_OF_CONDUCT.md LICENSE"
+  publish = "public"
+  command = "mkdocs build"
+  environment = { NODE_ENV = "production" }
+
+# Ignore specific files while deploying
+[build.ignore]
+  git-ignore = true
+  file = "!docs/**"
+  file = "!mkdocs.yml"
+  file = "!CONTRIBUTING.md"
+  file = "!CODE_OF_CONDUCT.md"
+  file = "!LICENSE"
