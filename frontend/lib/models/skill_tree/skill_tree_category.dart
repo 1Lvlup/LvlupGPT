@@ -6,33 +6,21 @@ enum SkillTreeCategory {
 }
 
 extension SkillTreeTypeExtension on SkillTreeCategory {
-  String get stringValue {
-    switch (this) {
-      case SkillTreeCategory.general:
-        return 'General';
-      case SkillTreeCategory.coding:
-        return 'Coding';
-      case SkillTreeCategory.data:
-        return 'Data';
-      case SkillTreeCategory.scrapeSynthesize:
-        return 'Scrape/Synthesize';
-      default:
-        return '';
-    }
-  }
+  Map<SkillTreeCategory, String> _stringValues = {
+    SkillTreeCategory.general: 'General',
+    SkillTreeCategory.coding: 'Coding',
+    SkillTreeCategory.data: 'Data',
+    SkillTreeCategory.scrapeSynthesize: 'Scrape/Synthesize',
+  };
 
-  String get jsonFileName {
-    switch (this) {
-      case SkillTreeCategory.general:
-        return 'general_tree_structure.json';
-      case SkillTreeCategory.coding:
-        return 'coding_tree_structure.json';
-      case SkillTreeCategory.data:
-        return 'data_tree_structure.json';
-      case SkillTreeCategory.scrapeSynthesize:
-        return 'scrape_synthesize_tree_structure.json';
-      default:
-        return '';
-    }
-  }
+  Map<SkillTreeCategory, String> _jsonFileNames = {
+    SkillTreeCategory.general: 'general_tree_structure.json',
+    SkillTreeCategory.coding: 'coding_tree_structure.json',
+    SkillTreeCategory.data: 'data_tree_structure.json',
+    SkillTreeCategory.scrapeSynthesize: 'scrape_synthesize_tree_structure.json',
+  };
+
+  String get stringValue => _stringValues[this] ?? '';
+
+  String get jsonFileName => _jsonFileNames[this] ?? '';
 }
