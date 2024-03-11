@@ -4,30 +4,50 @@ import 'package:auto_gpt_flutter_client/viewmodels/task_queue_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// This class represents the LeaderboardSubmissionDialog widget, which is a
+/// dialog for submitting a leaderboard entry with team name, GitHub repo URL,
+/// and commit SHA.
 class LeaderboardSubmissionDialog extends StatefulWidget {
-  final Function(String, String, String)? onSubmit;
-  // TODO: Create a view model for this class and remove the TaskQueueViewModel
-  final TaskQueueViewModel viewModel;
-
+  /// Constructor for the LeaderboardSubmissionDialog widget.
+  ///
+  /// onSubmit: A callback function that is called when the submission is
+  ///   valid and the user presses the submit button. It takes three string
+  ///   parameters: teamName, repoUrl, and commitSha.
+  /// viewModel: The TaskQueueViewModel instance that is used for shared
+  ///   preferences operations.
   const LeaderboardSubmissionDialog({
     Key? key,
     this.onSubmit,
     required this.viewModel,
   }) : super(key: key);
 
+  /// The TaskQueueViewModel instance that is used for shared preferences
+  /// operations.
+  final TaskQueueViewModel viewModel;
+
   @override
   _LeaderboardSubmissionDialogState createState() =>
       _LeaderboardSubmissionDialogState();
 }
 
-class _LeaderboardSubmissionDialogState
-    extends State<LeaderboardSubmissionDialog> {
+/// This class represents the state of the LeaderboardSubmissionDialog widget.
+class _LeaderboardSubmissionDialogState extends State<LeaderboardSubmissionDialog> {
+  /// The TextEditingController for the team name input field.
   final TextEditingController _teamNameController = TextEditingController();
+
+  /// The TextEditingController for the GitHub repo URL input field.
   final TextEditingController _repoUrlController = TextEditingController();
+
+  /// The TextEditingController for the commit SHA input field.
   final TextEditingController _commitShaController = TextEditingController();
 
+  /// The error message for the team name input field.
   String? _teamNameError;
+
+  /// The error message for the GitHub repo URL input field.
   String? _repoUrlError;
+
+  /// The error message for the commit SHA input field.
   String? _commitShaError;
 
   @override
@@ -36,6 +56,8 @@ class _LeaderboardSubmissionDialogState
     _initSharedPreferences();
   }
 
+  /// Initializes shared preferences by getting stored values for team name,
+  /// GitHub repo URL, and commit SHA.
   Future<void> _initSharedPreferences() async {
     // Using the SharedPreferencesService from the viewModel to get stored values
     _teamNameController.text =
@@ -46,6 +68,8 @@ class _LeaderboardSubmissionDialogState
         await widget.viewModel.prefsService.getString('commitSha') ?? '';
   }
 
+  /// Validates the input fields and submits the leaderboard entry if the input
+  /// is valid.
   void _validateAndSubmit() async {
     setState(() {
       _teamNameError = null;
@@ -88,6 +112,7 @@ class _LeaderboardSubmissionDialogState
     }
   }
 
+  /// Saves the input field values to shared preferences.
   Future<void> _saveToSharedPreferences() async {
     // Using the prefsService to save the values
     await widget.viewModel.prefsService
@@ -123,119 +148,4 @@ class _LeaderboardSubmissionDialogState
                 color: Colors.black,
                 fontSize: 16,
                 fontFamily: 'Archivo',
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 14),
-            // Team Name Field
-            const Text('Team Name'),
-            TextField(
-              controller: _teamNameController,
-              decoration: InputDecoration(
-                hintText: 'Keyboard Warriors',
-                errorText: _teamNameError,
-                border: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: _teamNameError != null ? Colors.red : Colors.grey,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            // Github Repo URL Field
-            const Text('Github Repo URL'),
-            TextField(
-              controller: _repoUrlController,
-              decoration: InputDecoration(
-                hintText: 'https://github.com/KeyboardWarriors/BestAgentEver',
-                errorText: _repoUrlError,
-                border: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: _repoUrlError != null ? Colors.red : Colors.grey,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            // Commit SHA Field
-            const Text('Commit SHA'),
-            TextField(
-              controller: _commitShaController,
-              decoration: InputDecoration(
-                hintText: '389131f2ab78c2cc5bdd2ec257be2d18b3a63da3',
-                errorText: _commitShaError,
-                border: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: _commitShaError != null ? Colors.red : Colors.grey,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-            // Buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Cancel Button
-                SizedBox(
-                  width: 106,
-                  height: 28,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                    ),
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text(
-                      'Cancel',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12.50,
-                        fontFamily: 'Archivo',
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 8),
-                // Submit Button
-                SizedBox(
-                  width: 106,
-                  height: 28,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryLight,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                    ),
-                    onPressed: _validateAndSubmit,
-                    child: const Text(
-                      'Submit',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12.50,
-                        fontFamily: 'Archivo',
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _teamNameController.dispose();
-    _repoUrlController.dispose();
-    _commitShaController.dispose();
-    super.dispose();
-  }
-}
+                font
