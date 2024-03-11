@@ -2,7 +2,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- This key is related to a warning message displayed by the IDE when compiling a 32-bit application for macOS. -->
 	<key>IDEDidComputeMac32BitWarning</key>
 	<true/>
 </dict>
 </plist>
+
