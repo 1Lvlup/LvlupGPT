@@ -1,22 +1,40 @@
 #!/bin/bash
 
 # Define variables
+# - script_dir: The directory where the script is located
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
+
+# - repo: The GitHub repository URL
 repo="https://github.com/polywrap/evo.ninja.git"
+
+# - branch: The branch to be checked out after cloning the repository
 branch="release/autogpt"
 
 # Clone the repo and checkout the release branch
 echo "Cloning evo.ninja..."
+
+# The 'git clone' command is used to copy the repository from the remote URL
+# to the local machine. The '--depth 1' flag is used to only fetch the most recent commit,
+# which reduces the size of the clone and speeds up the process.
 git clone --depth 1 --branch $branch $repo || {
+
+    # If the '--depth 1' flag fails (e.g., due to a shallow-clone error),
+    # the script will attempt to clone the repository without the '--depth 1' flag.
     echo "Cloning failed, trying without --depth 1..."
     git clone $repo || {
+
+        # If the clone fails entirely, the script will print an error message
+        # and exit with a non-zero status code (1).
         echo "Cloning failed, please check the repository URL."
         exit 1
     }
 }
+
+# Change the current working directory to the cloned repository
 cd evo.ninja || {
     echo "Failed to change directory to cloned repo."
     exit 1
 }
 
+# Output a success message
 echo "Setup successfully."
