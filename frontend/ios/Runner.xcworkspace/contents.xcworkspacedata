@@ -1,10 +1,21 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<!-- The Workspace file is used by Xcode to manage and organize projects,
+     including multiple projects and external references. This file contains
+     configurations and settings for the workspace, as well as references
+     to the projects and files within it. -->
+
 <Workspace
    version = "1.0"
    xmlns="http://developer.apple.com/xsode/properties/"
    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
    xsi:schemaLocation="http://developer.apple.com/xsode/properties/ http://developer.apple.com/library/ios/documentation/Xcode/Reference/xcode_schema/_index.html">
+
+   <!-- FileRef elements define references to files or groups within the
+         workspace. In this case, we have a reference to the Runner.xcodeproj
+         project file. -->
    <FileRef
       location="group:Runner.xcodeproj"
       active="true"
-      external="
+      external="...">
+   </FileRef>
+
+</Workspace>
