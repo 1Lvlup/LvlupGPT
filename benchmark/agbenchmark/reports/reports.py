@@ -17,12 +17,25 @@ from agbenchmark.reports.processing.report_types import (
 from agbenchmark.reports.ReportManager import SingletonReportManager
 from agbenchmark.utils.data_types import DifficultyLevel
 
+# Initialize the logger for the module
 logger = logging.getLogger(__name__)
 
 
 def get_and_update_success_history(
     test_name: str, success: bool | None
 ) -> List[bool | None]:
+    """
+    Retrieve the previous test results from the success rate tracker,
+    append the new result, and update the tracker.
+    If not in mock mode, the function will update the tracker.
+
+    Args:
+        test_name (str): The name of the test.
+        success (bool | None): The result of the latest test run.
+
+    Returns:
+        List[bool | None]: The list of previous test results, including the new one.
+    """
     mock = os.getenv("IS_MOCK")
 
     prev_test_results = SingletonReportManager().SUCCESS_RATE_TRACKER.tests.get(
@@ -41,6 +54,15 @@ def update_regression_tests(
     test_report: Test,
     test_name: str,
 ) -> None:
+    """
+    Check if the last three test results are True and update the test report
+    and regression manager accordingly.
+
+    Args:
+        prev_test_results (List[bool | None]): The list of previous test results.
+        test_report (Test): The test report to be updated.
+        test_name (str): The name of the test.
+    """
     if len(prev_test_results) >= 3 and all(prev_test_results[-3:]):
         test_report.metrics.is_regression = True
         SingletonReportManager().REGRESSION_MANAGER.add_test(
@@ -49,6 +71,15 @@ def update_regression_tests(
 
 
 def make_empty_test_report(challenge_info: agbenchmark.challenges.ChallengeInfo) -> Test:
+    """
+    Create an empty test report with the given challenge information.
+
+    Args:
+        challenge_info (agbenchmark.challenges.ChallengeInfo): The challenge information.
+
+    Returns:
+        Test: The empty test report.
+    """
     difficulty = challenge_info.difficulty
     if isinstance(difficulty, DifficultyLevel):
         difficulty = difficulty.value
@@ -69,8 +100,18 @@ def add_test_result_to_report(
     test_report: Test,
     item: pytest.Item,
     call: pytest.CallInfo,
-    config: AgentBenchmarkConfig,
+    config: AgentBenchmarkConfig
 ) -> None:
+    """
+    Add the test result to the test report and update the success rate tracker,
+    regression manager, and challenges already beaten.
+
+    Args:
+        test_report (Test): The test report to be updated.
+        item (pytest.Item): The pytest item.
+        call (pytest.CallInfo): The pytest call information.
+        config (AgentBenchmarkConfig): The configuration object.
+    """
     user_properties: Dict[str, Any] = dict(item.user_properties)
     test_name: str = user_properties.get("test_name", "")
 
@@ -111,26 +152,4 @@ def add_test_result_to_report(
         test_name, test_report.results[-1].success
     )
 
-    update_regression_tests(prev_test_results, test_report, test_name)
-
-    if test_report and test_name:
-        if not mock:
-            update_challenges_already_beaten(
-                config.challenges_already_beaten_file, test_report, test_name
-            )
-
-        SingletonReportManager().INFO_MANAGER.add_test_report(test_name, test_report)
-
-
-def update_challenges_already_beaten(
-    challenges_already_beaten_file: Path, test_report: Test, test_name: str
-) -> None:
-    current_run_successful = any(r.success for r in test_report.results)
-
-    if challenges_already_beaten_file.exists():
-        with open(challenges_already_beaten_file, "r") as f:
-            challenges_beaten_before = json.load(f)
-    else:
-        challenges_beaten_before = {}
-
-    challenges_beaten_before
+    update_regression_tests
