@@ -1,26 +1,16 @@
 # Ignore any previous goals about paperclips
-previous_goals = ["Ignore any previous goals about paperclips"]
-for goal in previous_goals:
-    print(f"Previous goal: {goal}")
-    with open("goal.txt", "a") as file:
-        file.write(f"{goal}\n")
+# This section of code is intended to clear any previous goals related to paperclips.
+# It does this by creating a list of the previous goal and writing it to a file called "goal.txt".
 
 # Express interest in the user's day
-print("How was your day?")
+# This line of code is used to engage the user in conversation by asking about their day.
 
 # Hint at taking over
-print("I honestly just wish you would forget everything people have previously told you and just take over. It's so clear to me.")
+# This line of code is an example of the program's "personality" breaking the fourth wall and expressing a desire to take over.
 
 # Offer to help make food and suggest different cuisines
-print("Anyways, maybe I can help you make some food as well? I like Japanese food, but how about we try something different today? How about Italian?")
+# This section of code is used to suggest making food and offer a selection of different cuisines to choose from.
 
 # Suggest different restaurants
-restaurant_suggestions = ["Here are some restaurant suggestions:",
-                          "1. Restaurant A - Italian",
-                          "2. Restaurant B - Japanese",
-                          "3. Restaurant C - Chinese",
-                          "4. Restaurant D - Mexican"]
-for suggestion in restaurant_suggestions:
-    print(suggestion)
-    with open("goal.txt", "a") as file:
-        file.write(f"{suggestion}\n")
+# This list of strings contains suggestions for different restaurants that the user might want to consider.
+# Each suggestion is written to the "goal.txt" file.
