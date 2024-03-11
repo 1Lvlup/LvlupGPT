@@ -6,7 +6,7 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import List, Optional
 
-import docker
+import docker  # Docker SDK for Python
 from docker.errors import DockerException, ImageNotFound, NotFound
 from docker.models.containers import Container as DockerContainer
 
@@ -23,9 +23,9 @@ from autogpt.core.utils.json_schema import JSONSchema
 
 from .decorators import sanitize_path_arg
 
+# COMMAND_CATEGORY and COMMAND_CATEGORY_TITLE are used for command categorization
 COMMAND_CATEGORY = "execute_code"
 COMMAND_CATEGORY_TITLE = "Execute Code"
-
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +85,7 @@ def execute_python_code(code: str, agent: Agent) -> str:
     Returns:
         str: The STDOUT captured from the code when it ran.
     """
+    # Create a temporary file with the provided code
     with NamedTemporaryFile(
         "w", dir=agent.workspace.root, suffix=".py", encoding="utf-8"
     ) as tmp_code_file:
@@ -92,8 +93,10 @@ def execute_python_code(code: str, agent: Agent) -> str:
         tmp_code_file.flush()
 
         try:
+            # Execute the Python file in the Docker container
             return execute_python_file(tmp_code_file.name, agent)  # type: ignore
         except Exception as e:
+            # Raise a CommandExecutionError if any exception occurs
             raise CommandExecutionError(*e.args)
 
 
@@ -141,10 +144,12 @@ def execute_python_file(
         args = args.split()  # Convert space-separated string to a list
 
     if not filename.suffix == ".py":
+        # Raise an InvalidArgumentError if the file is not a .py file
         raise InvalidArgumentError("Invalid file type. Only .py files are allowed.")
 
     file_path = filename
     if not file_path.is_file():
+        # Raise a FileNotFoundError if the file does not exist
         raise FileNotFoundError(
             f"python: can't open file '{filename}': [Errno 2] No such file or directory"
         )
@@ -160,9 +165,4 @@ def execute_python_file(
             encoding="utf8",
             cwd=str(agent.workspace.root),
         )
-        if result.returncode == 0:
-            return result.stdout
-        else:
-            raise CodeExecutionError(result.stderr)
 
-    try
