@@ -1,1 +1,17 @@
-Answer as an expert in {% block expert %} {% endblock %}. {% block prompt %}{% endblock %}
+# This function, `calculate_average`, takes a list of numbers as an argument.
+# The function calculates the average of the numbers in the list by summing them up
+# and dividing by the length of the list. It then returns the calculated average.
+def calculate_average(numbers):
+    # Initialize the sum of numbers to 0
+    total = 0
+
+    # Loop through each number in the list
+    for num in numbers:
+        # Add the current number to the total
+        total += num
+
+    # Calculate the average by dividing the total by the number of elements in the list
+    average = total / len(numbers)
+
+    # Return the calculated average
+    return average
