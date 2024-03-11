@@ -1,30 +1,58 @@
-Specifications for Battleship
+# Battleship Game
 
-Overview: Battleship is a two-player strategy game where each player places their fleet of ships on a grid and tries to sink the opponent's fleet by guessing their locations.
-Players take turns calling out a row and column, attempting to name a square containing one of the opponent's ships.
+# Specifications
+# -----------------
+# 2-player strategy game
+# 10x10 grid for each player
+# 5 ship types with varying squares: Carrier (5), Battleship (4), Cruiser (3), Submarine (3), Destroyer (2)
+# Ships occupy contiguous squares, arranged horizontally or vertically
+# Players take turns announcing grid squares, opponent announces hit or miss
+# Game ends when one player sinks all opponent's ships
 
-The Grid: Each player's grid is a 10x10 grid, identified by rows (using numbers 1-10) and columns (using letters A-J).
+class Grid:
+    def __init__(self):
+        # Initialize 10x10 grid for each player
+        self.grid = [[None] * 10 for _ in range(10)]
 
-Ships:
+class Ship:
+    def __init__(self, name, length):
+        # Initialize ship with name and length
+        self.name = name
+        self.length = length
+        self.squares = []
 
-Carrier - 5 squares
-Battleship - 4 squares
-Cruiser - 3 squares
-Submarine - 3 squares
-Destroyer - 2 squares
-Each ship occupies contiguous squares on the grid, arranged either horizontally or vertically.
+    def place(self, row, col, orientation):
+        # Place ship on grid with given row, col, and orientation
+        if orientation == "horizontal":
+            for i in range(self.length):
+                self.squares.append((row, col + i))
+        elif orientation == "vertical":
+            for i in range(self.length):
+                self.squares.append((row + i, col))
 
-Setup:
+class Player:
+    def __init__(self):
+        # Initialize player with empty grid and fleet
+        self.grid = Grid()
+        self.fleet = [
+            Ship("Carrier", 5),
+            Ship("Battleship", 4),
+            Ship("Cruiser", 3),
+            Ship("Submarine", 3),
+            Ship("Destroyer", 2)
+        ]
 
-At the start of the game, each player places their fleet on their grid. This setup is hidden from the opponent.
-The game begins with Player 1, followed by Player 2, and so on.
-Taking Turns:
+    def place_ships(self):
+        # Place ships on grid according to specifications
+        for ship in self.fleet:
+            valid_placement = False
+            while not valid_placement:
+                row = int(input("Enter row for " + ship.name + " (1-10): ")) - 1
+                col = input("Enter column for " + ship.name + " (A-J): ").upper() - 65
+                orientation = input("Enter orientation for " + ship.name + " (horizontal/vertical): ").lower()
+                if 0 <= row < 10 and 0 <= col < 10 and orientation in ["horizontal", "vertical"]:
+                    ship.place(row, col, orientation)
+                    valid_placement = True
 
-On a player's turn, they announce a grid square (e.g., "D5").
-The opponent announces whether that square is a "hit" (if there's a part of a ship on that square) or "miss" (if the square is empty).
-If a player hits a square occupied by a ship, they get another turn to guess. This continues until they make a miss, at which point their turn ends.
-If a player hits all the squares occupied by a ship, the opponent must announce the sinking of that specific ship, e.g., "You sank my Battleship!"
+    def take_turn(self, opponent):
 
-Objective: The goal is to sink all of your opponent's ships before they sink yours.
-
-End of the Game: The game ends when one player has sunk all of the opponent's ships. The winner is the player who sinks all the opposing fleet first.
