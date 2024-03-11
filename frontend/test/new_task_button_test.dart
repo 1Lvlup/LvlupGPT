@@ -3,14 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  late bool wasPressed;
+
+  setUp(() {
+    wasPressed = false;
+  });
+
   testWidgets('NewTaskButton triggers callback on press',
       (WidgetTester tester) async {
-    bool wasPressed = false;
-
     // Build our widget.
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(
-        body: NewTaskButton(onPressed: () => wasPressed = true),
+        body: NewTaskButton(onPressed: () {
+          wasPressed = true;
+        }),
       ),
     ));
 
