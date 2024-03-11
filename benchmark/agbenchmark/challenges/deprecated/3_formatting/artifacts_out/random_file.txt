@@ -1,7 +1,8 @@
+# Set the number variable to the value of 81,462,000,000
 number = 81_462_000_000
 
-# Formatting the number with commas as thousand separators
+# Format the number with commas as thousand separators and store the result in the formatted_number variable
 formatted_number = format(number, ',')
 
-# Printing the number
+# Print the formatted number followed by the string 'Millions'
 print(f'{formatted_number} Millions')
