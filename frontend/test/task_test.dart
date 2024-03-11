@@ -9,6 +9,7 @@ void main() {
 
       expect(task.id, 1);
       expect(task.title, 'Test Task');
+      expect(task.toString(), 'Task(id: 1, title: Test Task)');
     });
 
     // Test Task.fromMap method
@@ -17,11 +18,15 @@ void main() {
 
       expect(task.id, 1);
       expect(task.title, 'Test Task');
+      expect(task.toString(), 'Task(id: 1, title: Test Task)');
     });
 
     // Test creating a Task with an empty title
     test('Task with empty title', () {
-      expect(() => Task(id: 2, title: ''), throwsA(isA<AssertionError>()));
+      expect(
+        () => Task(id: 2, title: ''),
+        throwsA(isA<AssertionError>()),
+      );
     });
 
     // Test that two Task objects with the same id and title are equal
@@ -30,6 +35,7 @@ void main() {
       final task2 = Task(id: 4, title: 'Same Task');
 
       expect(task1, task2);
+      expect(task1.hashCode == task2.hashCode, isTrue);
     });
 
     // Test that toString() returns a string representation of the Task
@@ -45,13 +51,17 @@ void main() {
       task.title = 'Modified Title';
 
       expect(task.title, 'Modified Title');
+      expect(task.toString(), 'Task(id: 6, title: Modified Title)');
     });
 
     // Test that setting an empty title throws an error
     test('Set empty title', () {
       final task = Task(id: 7, title: 'Valid Title');
 
-      expect(() => task.title = '', throwsA(isA<ArgumentError>()));
+      expect(
+        () => task.title = '',
+        throwsA(isA<ArgumentError>()),
+      );
     });
   });
 }
