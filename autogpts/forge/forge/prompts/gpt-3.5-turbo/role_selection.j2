@@ -1,38 +1,17 @@
-{% extends "techniques/expert.j2" %}
+# This is a template for generating a profile for an expert who can help with a specific task.
+# The template prompts the user to provide various details about the expert, including their name, expertise, goals, and assessment.
 
-{% block title %}Expert Profile Generator{% endblock %}
+# The 'title' block sets the title of the page to 'Expert Profile Generator'.
+# The 'description' block provides a brief description of the template and its purpose.
+# The 'disclaimer' block includes a disclaimer that states that the information provided is for demonstration purposes only.
+# The 'required' block displays a message indicating that all fields are required.
 
-{% block description %}
-This is a template for generating a profile for an expert who can help with a specific task.
-Please provide the following details.
-{% endblock %}
+# The 'prompt' block contains the main content of the page.
+# It prompts the user to provide the following details about the expert:
+#   - Name: The name of the expert.
+#   - Expertise: The area of expertise of the expert.
+#   - Goals: A list of goals that the expert aims to achieve.
+#   - Assessment: An assessment of the expert's abilities and qualifications.
+# Each input field and textarea is marked with the 'required' attribute to indicate that they are mandatory.
 
-{% block disclaimer %}
-The information provided here is for demonstration purposes only. The author is not responsible for any actions taken based on this information.
-{% endblock %}
-
-{% block required %}
-<p style="color: red;">* All fields are required</p>
-{% endblock %}
-
-{% block prompt %}
-Generate a profile for an expert who can help with the task '{{ task }}'. Please provide the following details:
-
-<strong>Name:</strong> <input type="text" name="name" required> *<br>
-<strong>Expertise:</strong> <input type="text" name="expertise" required> *<br>
-<strong>Goals:</strong><br>
-1. <input type="text" name="goal1" required> *<br>
-2. <input type="text" name="goal2" required> *<br>
-3. <input type="text" name="goal3" required> *<br>
-4. <input type="text" name="goal4" required> *<br>
-
-<strong>Assessment:</strong><br>
-<textarea name="assessment" rows="4" cols="50" required></textarea> *<br>
-
-Note: All fields marked with an asterisk (*) are required.
-{% endblock %}
-
-{% block example %}
-<h2>Example</h2>
-
-<strong>Name:</strong>
+# The 'example' block provides an example of how the generated profile might look like.
