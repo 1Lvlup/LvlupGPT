@@ -1,17 +1,28 @@
-import time
-from IPython.display import clear_output, HTML, display, Color
-def print_spin(text, delay=0.1):
-    animation = ["|", "/", "-", "\\"]
-    for char in text:
-        print(char, end="\r")
-        time.sleep(delay)
-    for i in range(100):
-        print(animation[i % len(animation)], end="\r")
-        time.sleep(delay)
-    print("")
+import time  # Importing time module to add delay between printed characters
+from IPython.display import clear_output, HTML, display, Color  # Importing IPython.display module to clear output, display HTML, and print colored text
 
-def print_color(text, color="green"):
-    print(Color.text(text, color))
+def print_spin(text, delay=0.1):  # Definition of the function print_spin with parameters text and delay
+    """
+    This function prints the input text with a spinning animation.
+    :param text: The text to be printed with animation
+    :param delay: Delay between printed characters (default: 0.1)
+    """
+    animation = ["|", "/", "-", "\\"]  # Predefined list of animation characters
+    for char in text:  # Iterating over each character in the input text
+        print(char, end="\r")  # Printing the character with a carriage return to overwrite the previous character
+        time.sleep(delay)  # Adding delay between printed characters
+    for i in range(100):  # Spinning animation loop
+        print(animation[i % len(animation)], end="\r")  # Printing the animation character with a carriage return to overwrite the previous character
+        time.sleep(delay)  # Adding delay between animation characters
+    print("")  # Printing a newline character to move to the next line
 
-print_spin("Hello World! ", delay=0.05)
-print_color("Hello World! ", color="blue")
+def print_color(text, color="green"):  # Definition of the function print_color with parameters text and color
+    """
+    This function prints the input text in the specified color.
+    :param text: The text to be printed
+    :param color: The color of the text (default: "green")
+    """
+    print(Color.text(text, color))  # Printing the text in the specified color
+
+print_spin("Hello World! ", delay=0.05)  # Calling the print_spin function with the text "Hello World!" and delay 0.05
+print_color("Hello World! ", color="blue")  # Calling the print_color function with the text "Hello World!" and color "blue"
