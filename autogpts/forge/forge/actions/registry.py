@@ -8,6 +8,10 @@ import pydantic
 
 
 class ActionParameter(pydantic.BaseModel):
+    """
+    Represents a single parameter for an action.
+    Contains the name, description, type, and required status of the parameter.
+    """
     name: str
     description: str
     type_: str
@@ -15,17 +19,27 @@ class ActionParameter(pydantic.BaseModel):
 
 
 class Action(pydantic.BaseModel):
+    """
+    Represents an action that can be performed by the agent.
+    Contains the name, description, method, parameters, output type, and category of the action.
+    """
     name: str
     description: str
     method: Callable
     parameters: List[ActionParameter]
     output_type: str
     category: Optional[str] = None
-
+    
     def __call__(self, *args: Any, **kwds: Any) -> Any:
+        """
+        Calls the method associated with the action.
+        """
         return self.method(*args, **kwds)
-
+    
     def __str__(self) -> str:
+        """
+        Returns a string representation of the action.
+        """
         params_str = ", ".join(
             f"{param.name}: {param.type_}" for param in self.parameters
         )
@@ -35,6 +49,10 @@ class Action(pydantic.BaseModel):
 def action(
     name: str, description: str, parameters: List[ActionParameter], output_type: str
 ):
+    """
+    A decorator for defining an action.
+    Validates the parameters of the action and associates it with the decorated function.
+    """
     def decorator(func):
         func_params = inspect.signature(func).parameters
         param_names = {param.name for param in parameters}
@@ -59,12 +77,21 @@ def action(
 
 
 class ActionRegister:
+    """
+    Manages the registration and execution of actions.
+    """
     def __init__(self, agent=None):
+        """
+        Initializes the ActionRegister class.
+        """
         self.abilities = {}
         self.register_abilities()
         self.agent = agent
 
     def register_abilities(self):
+        """
+        Registers abilities from the actions directory.
+        """
         action_module_path = os.path.join(os.path.dirname(__file__), "actions")
         for action_path in glob.glob(os.path.join(action_module_path, "*.py")):
             if not os.path.basename(action_path) in ["__init__.py", "registry.py"]:
@@ -88,12 +115,21 @@ class ActionRegister:
                     print(f"Error occurred while registering abilities: {str(e)}")
 
     def list_abilities(self) -> List[Action]:
+        """
+        Returns a list of all registered abilities.
+        """
         return list(self.abilities.values())
 
     def list_abilities_for_prompt(self) -> List[str]:
+        """
+        Returns a list of strings representing the abilities for display in a prompt.
+        """
         return [str(action) for action in self.abilities.values()]
 
     def abilities_description(self) -> str:
+        """
+        Returns a string describing all registered abilities, grouped by category.
+        """
         abilities_by_category = {}
         for action in self.abilities.values():
             if action.category not in abilities_by_category:
@@ -113,6 +149,9 @@ class ActionRegister:
     async def run_action(
         self, task_id: str, action_name: str, *args: Any, **kwds: Any
     ) -> Any:
+        """
+        Executes the specified action.
+        """
         try:
             action = self.abilities[action_name]
             return await action(self.agent, task_id, *args, **kwds)
