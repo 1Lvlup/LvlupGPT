@@ -19,11 +19,34 @@ class SideBarView extends StatelessWidget {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // TODO: should we pass this in as a dependency?
+  // Function to create an IconButton for the menu items
+  Widget _menuItem(
+    String title,
+    String iconName,
+    String viewName, {
+    bool isDeveloperOnly = false,
+    bool isBenchmarkRunning = false,
+  }) {
     final taskQueueViewModel =
         Provider.of<TaskQueueViewModel>(context, listen: true);
+    final settingsViewModel =
+        Provider.of<SettingsViewModel>(context, listen: true);
+
+    return IconButton(
+      splashRadius: 0.1,
+      color: selectedViewNotifier.value == viewName
+          ? Colors.blue
+          : Colors.black,
+      icon: Image.asset('assets/images/$iconName.png'),
+      onPressed: isBenchmarkRunning ||
+              (isDeveloperOnly && !settingsViewModel.isDeveloperModeEnabled)
+          ? null
+          : () => selectedViewNotifier.value = viewName,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Material(
       child: ValueListenableBuilder(
           valueListenable: selectedViewNotifier,
@@ -34,76 +57,58 @@ class SideBarView extends StatelessWidget {
                 children: [
                   Column(
                     children: [
-                      IconButton(
-                        splashRadius: 0.1,
-                        color: selectedView == 'TaskView'
-                            ? Colors.blue
-                            : Colors.black,
-                        icon: const Icon(Icons.chat),
-                        onPressed: taskQueueViewModel.isBenchmarkRunning
-                            ? null
-                            : () => selectedViewNotifier.value = 'TaskView',
-                      ),
+                      _menuItem('TaskView', 'chat', 'TaskView'),
                       if (Provider.of<SettingsViewModel>(context, listen: true)
                           .isDeveloperModeEnabled)
-                        IconButton(
-                          splashRadius: 0.1,
-                          color: selectedView == 'SkillTreeView'
-                              ? Colors.blue
-                              : Colors.black,
-                          icon: const Icon(Icons.emoji_events),
-                          onPressed: taskQueueViewModel.isBenchmarkRunning
-                              ? null
-                              : () =>
-                                  selectedViewNotifier.value = 'SkillTreeView',
-                        ),
-                      IconButton(
-                        splashRadius: 0.1,
-                        color: selectedView == 'SettingsView'
-                            ? Colors.blue
-                            : Colors.black,
-                        icon: const Icon(Icons.settings),
-                        onPressed: () =>
-                            selectedViewNotifier.value = 'SettingsView',
-                      ),
+                        _menuItem('SkillTreeView', 'emoji_events', 'SkillTreeView',
+                            isDeveloperOnly: true),
+                      _menuItem('SettingsView', 'settings', 'SettingsView'),
                     ],
                   ),
                   const Spacer(),
                   Column(
                     children: [
-                      IconButton(
-                        splashRadius: 0.1,
-                        iconSize: 25,
-                        icon: Icon(Icons.book,
-                            color: Color.fromRGBO(50, 120, 123, 1)),
-                        onPressed: () => _launchURL(
-                            'https://aiedge.medium.com/autogpt-forge-e3de53cc58ec'),
-                        tooltip: 'Learn how to build your own Agent',
+                      GestureDetector(
+                        onTap: () =>
+                            _launchURL('https://aiedge.medium.com/autogpt-forge-e3de53cc58ec'),
+                        child: Tooltip(
+                          message: 'Learn how to build your own Agent',
+                          child: Icon(
+                            Icons.book,
+                            color: Color.fromRGBO(50, 120, 123, 1),
+                            size: 25,
+                          ),
+                        ),
                       ),
-                      IconButton(
-                        splashRadius: 0.1,
-                        iconSize: 33,
-                        icon: Image.asset('assets/images/autogpt_logo.png'),
-                        onPressed: () =>
+                      GestureDetector(
+                        onTap: () =>
                             _launchURL('https://leaderboard.agpt.co'),
-                        tooltip: 'Check out the leaderboard',
+                        child: Tooltip(
+                          message: 'Check out the leaderboard',
+                          child: Image.asset(
+                            'assets/images/autogpt_logo.png',
+                            width: 33,
+                            height: 33,
+                          ),
+                        ),
                       ),
-                      IconButton(
-                        splashRadius: 0.1,
-                        iconSize: 25,
-                        icon: Image.asset('assets/images/discord_logo.png'),
-                        onPressed: () =>
+                      GestureDetector(
+                        onTap: () =>
                             _launchURL('https://discord.gg/autogpt'),
-                        tooltip: 'Join our Discord',
+                        child: Tooltip(
+                          message: 'Join our Discord',
+                          child: Image.asset(
+                            'assets/images/discord_logo.png',
+                            width: 25,
+                            height: 25,
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 6),
-                      IconButton(
-                        splashRadius: 0.1,
-                        iconSize: 15,
-                        icon: Image.asset('assets/images/twitter_logo.png'),
-                        onPressed: () =>
-                            _launchURL('https://twitter.com/Auto_GPT'),
-                        tooltip: 'Follow us on Twitter',
+                      Image.asset(
+                        'assets/images/twitter_logo.png',
+                        width: 15,
+                        height: 15,
                       ),
                       const SizedBox(height: 8),
                     ],
