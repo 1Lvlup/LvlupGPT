@@ -1,63 +1,36 @@
-name: auto_gpt_flutter_client
-description: A Flutter project for AutoGPT, an AI-powered code completion tool.
+// name: auto_gpt_flutter_client
+// description: A Flutter project for AutoGPT, an AI-powered code completion tool.
 
 publish_to: 'none'
 
-version: 1.0.0+1
+// version: 1.0.0+1 - The version of the package, with a major.minor.patch format
+// and an optional build number.
 
 environment:
   sdk: '>=3.0.0-417.2.beta <4.0.0'
 
 dependencies:
+  // flutter: - The Flutter SDK, imported as a dependency.
   flutter:
     sdk: flutter
-  collection: ^1.15.2
-  flutter_highlight: ^0.7.0
-  cupertino_icons: ^1.0.5
-  provider: ^6.0.3
-  http: ^0.13.6
-  shared_preferences: ^2.2.1
-  graphview: ^1.3.0
-  firebase_core: ^2.16.0
-  firebase_auth: ^4.6.1
-  firebase_analytics: ^11.3.0
-  google_sign_in: ^6.1.4
-  uuid: ^4.0.0
-  url_launcher: ^6.1.15
-  fluttertoast: ^8.2.3
-  flutter_markdown: ^0.6.2
+  collection: ^1.15.2 - A package that provides additional collection utilities.
+  flutter_highlight: ^0.7.0 - A package that highlights syntax in code snippets.
+  cupertino_icons: ^1.0.5 - A package that provides Cupertino icons for Flutter.
+  provider: ^6.0.3 - A package that provides simple state management.
+  http: ^0.13.6 - A package that provides an HTTP client for Dart.
+  shared_preferences: ^2.2.1 - A package that provides a way to store key-value pairs.
+  graphview: ^1.3.0 - A package that provides a way to display graphs.
+  firebase_core: ^2.16.0 - The Firebase core package for Flutter.
+  firebase_auth: ^4.6.1 - The Firebase authentication package for Flutter.
+  firebase_analytics: ^11.3.0 - The Firebase analytics package for Flutter.
+  google_sign_in: ^6.1.4 - The Google sign-in package for Flutter.
+  uuid: ^4.0.0 - A package that provides a way to generate UUIDs.
+  url_launcher: ^6.1.15 - A package that provides a way to launch URLs.
+  fluttertoast: ^8.2.3 - A package that provides a way to show toast notifications.
+  flutter_markdown: ^0.6.2 - A package that provides a way to render Markdown.
 
 dev_dependencies:
+  // flutter_test: - The Flutter test package, imported as a development dependency.
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.0
-
-funding:
-  github: https://github.com/sponsors/infinitered
-
-readme: |
-  # AutoGPT Flutter Client
-
-  A Flutter project for AutoGPT, an AI-powered code completion tool.
-
-flutter:
-  uses-material-design: true
-  generate: true
-  fonts:
-    - family: Roboto
-      fonts:
-        - asset: fonts/Roboto-Regular.ttf
-        - asset: fonts/Roboto-Medium.ttf
-          weight: 500
-
-  assets:
-    - assets/tree_structure.json
-    - assets/images/google_logo.svg.png
-    - assets/images/github_logo.svg.png
-    - assets/images/autogpt_logo.png
-    - assets/images/discord_logo.png
-    - assets/images/twitter_logo.png
-    - assets/general_tree_structure.json
-    - assets/coding_tree_structure.json
-    - assets/data_tree_structure.json
-    - assets/scrape_synthesize_tree_structure.json
+  // flutter_lints: - A package that provides
