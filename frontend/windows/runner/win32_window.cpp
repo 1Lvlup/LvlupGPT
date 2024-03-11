@@ -1,12 +1,12 @@
-#include <windows.h>
-#include <dwmapi.h>
-#include <flutter_windows.h>
-#include <string>
-#include <vector>
+#include <windows.h> // Include header for Windows API
+#include <dwmapi.h>  // Include header for DWM (Desktop Window Manager) API
+#include <flutter_windows.h> // Include header for Flutter Windows API
+#include <string>          // Include header for std::string
+#include <vector>          // Include header for std::vector
 
-#include "win32_window.h"
+#include "win32_window.h"   // Include header for this translation unit
 
-namespace {
+namespace { // Anonymous namespace for local helper functions
 
 constexpr const wchar_t kWindowClassName[] = L"FLUTTER_RUNNER_WIN32_WINDOW";
 constexpr const wchar_t kGetPreferredBrightnessRegKey[] =
@@ -19,32 +19,32 @@ static int g_active_window_count = 0;
 // Scale helper to convert logical scaler values to physical using passed in
 // scale factor
 int Scale(int source, double scale_factor) {
-  return static_cast<int>(source * scale_factor);
+  return static_cast<int>(source * scale_factor); // Scale the source value by the scale factor
 }
 
 // Dynamically loads the |EnableNonClientDpiScaling| from the User32 module.
 // This API is only needed for PerMonitor V1 awareness mode.
 void EnableFullDpiSupportIfAvailable(HWND hwnd) {
-  HMODULE user32_module = LoadLibraryA("User32.dll");
-  if (!user32_module) {
+  HMODULE user32_module = LoadLibraryA("User32.dll"); // Load User32.dll
+  if (!user32_module) { // Check if the module was loaded successfully
     return;
   }
   auto enable_non_client_dpi_scaling =
       reinterpret_cast<EnableNonClientDpiScaling*>(
           GetProcAddress(user32_module, "EnableNonClientDpiScaling"));
-  if (enable_non_client_dpi_scaling != nullptr) {
-    enable_non_client_dpi_scaling(hwnd);
+  if (enable_non_client_dpi_scaling != nullptr) { // Check if the API was found
+    enable_non_client_dpi_scaling(hwnd); // Enable non-client DPI scaling
   }
-  FreeLibrary(user32_module);
+  FreeLibrary(user32_module); // Free the loaded module
 }
 
-class WindowClassRegistrar {
+class WindowClassRegistrar { // Class to register and unregister window class
  public:
   ~WindowClassRegistrar() = default;
 
   // Returns the singleton registrar instance.
   static WindowClassRegistrar* GetInstance() {
-    if (!instance_) {
+    if (!instance_) { // Create the instance if it doesn't exist
       instance_ = new WindowClassRegistrar();
     }
     return instance_;
@@ -71,7 +71,7 @@ class WindowClassRegistrar {
 WindowClassRegistrar* WindowClassRegistrar::instance_ = nullptr;
 
 const wchar_t* WindowClassRegistrar::GetWindowClass() {
-  if (!class_registered_) {
+  if (!class_registered_) { // Register the window class if it hasn't been registered
     window_class_.hCursor = LoadCursor(nullptr, IDC_ARROW);
     window_class_.lpszClassName = kWindowClassName;
     window_class_.style = CS_HREDRAW | CS_VREDRAW;
@@ -90,34 +90,38 @@ const wchar_t* WindowClassRegistrar::GetWindowClass() {
 }
 
 void WindowClassRegistrar::UnregisterWindowClass() {
-  UnregisterClass(kWindowClassName, nullptr);
+  UnregisterClass(kWindowClassName, nullptr); // Unregister the window class
   class_registered_ = false;
 }
 
 Win32Window::Win32Window() {
-  ++g_active_window_count;
+  ++g_active_window_count; // Increment the active window count
 }
 
 Win32Window::~Win32Window() {
-  --g_active_window_count;
+  --g_active_window_count; // Decrement the active window count
   Destroy();
 }
 
 bool Win32Window::Create(const std::wstring& title,
                          const Point& origin,
                          const Size& size) {
-  Destroy();
+  Destroy(); // Destroy any existing window
 
   const wchar_t* window_class =
-      WindowClassRegistrar::GetInstance()->GetWindowClass();
+      WindowClassRegistrar::GetInstance()->GetWindowClass(); // Get the window class
 
   const POINT target_point = {static_cast<LONG>(origin.x),
                               static_cast<LONG>(origin.y)};
-  HMONITOR monitor = MonitorFromPoint(target_point, MONITOR_DEFAULTTONEAREST);
-  UINT dpi = FlutterDesktopGetDpiForMonitor(monitor);
-  double scale_factor = dpi / 96.0;
+  HMONITOR monitor = MonitorFromPoint(target_point, MONITOR_DEFAULTTONEAREST); // Get the monitor that contains the target point
+  UINT dpi = FlutterDesktopGetDpiForMonitor(monitor); // Get the DPI for the monitor
+  double scale_factor = dpi / 96.0; // Calculate the scale factor
 
   HWND window = CreateWindow(
       const_cast<wchar_t*>(window_class), title.c_str(), WS_OVERLAPPEDWINDOW,
       Scale(origin.x, scale_factor), Scale(origin.y, scale_factor),
-      Scale(
+      Scale(size.width, scale_factor), Scale(size.height, scale_factor),
+      nullptr, nullptr, window_class_.hInstance, this); // Create the window
+
+  if (!window) { // Check if the window was created successfully
+   
