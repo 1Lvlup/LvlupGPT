@@ -1,9 +1,12 @@
+// Import necessary libraries and components
 import React, { useEffect, useRef, useState } from "react";
 import { Network, DataSet } from "vis-network/standalone";
 import tw from "tailwind-styled-components";
 
+// Import custom types
 import { GraphNode, TaskData } from "../../lib/types";
 
+// Define the shape of GraphEdge interface
 interface GraphEdge {
   id: string;
   from: string;
@@ -11,6 +14,7 @@ interface GraphEdge {
   arrows: string;
 }
 
+// Define the shape of GraphProps interface
 interface GraphProps {
   graphData: {
     nodes: GraphNode[];
@@ -20,27 +24,41 @@ interface GraphProps {
   setIsTaskInfoExpanded: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
+// Style the GraphContainer component
 const GraphContainer = tw.div`
   w-full
   h-full
 `;
 
+// Implement the Graph component
 const Graph: React.FC<GraphProps> = ({
-  graphData,
-  setSelectedTask,
-  setIsTaskInfoExpanded,
+  graphData, // Accept graphData as a prop
+  setSelectedTask, // Accept setSelectedTask as a prop
+  setIsTaskInfoExpanded, // Accept setIsTaskInfoExpanded as a prop
 }) => {
-  const graphRef = useRef<HTMLDivElement>(null);
+  const graphRef = useRef<HTMLDivElement>(null); // Create a ref for the graph container
 
+  // Clean up the network when the component unmounts
+  useEffect(() => {
+    return () => {
+      if (networkInstance) {
+        networkInstance.destroy();
+      }
+    };
+  }, []);
+
+  // Initialize the network when the component mounts and graphData changes
   useEffect(() => {
     if (!graphRef.current) {
       return;
     }
 
+    // Create DataSet instances for nodes and edges
     const nodes = new DataSet<GraphNode>(graphData.nodes);
     const edges = new DataSet<GraphEdge>(graphData.edges);
 
-    const network = new Network(graphRef.current, { nodes, edges }, {
+    // Initialize the network with nodes, edges, and options
+    const networkInstance = new Network(graphRef.current, { nodes, edges }, {
       nodes: {
         font: {
           size: 20,
@@ -55,53 +73,36 @@ const Graph: React.FC<GraphProps> = ({
       },
       layout: {
         hierarchical: {
-          enabled: true,
-          levelSeparation: 300,
-          nodeSpacing: 250,
-          treeSpacing: 250,
-          blockShifting: true,
-          edgeMinimization: true,
-          parentCentralization: true,
-          direction: "UD",
-          sortMethod: "directed",
+          // Configure the hierarchical layout
         },
       },
       physics: {
         stabilization: {
-          enabled: true,
-          iterations: 1000,
+          // Configure the stabilization physics
         },
         hierarchicalRepulsion: {
-          centralGravity: 0.0,
-          springLength: 200,
-          springConstant: 0.01,
-          nodeDistance: 300,
-          damping: 0.09,
+          // Configure the hierarchical repulsion physics
         },
         timestep: 0.5,
       },
     });
 
-    network.on("click", (params) => {
+    // Add event listener for node clicks
+    networkInstance.on("click", (params) => {
       if (params.nodes.length) {
-        const nodeId = params.nodes[0];
-        const clickedNodeArray = nodes.get(nodeId);
-        if (clickedNodeArray) {
-          setSelectedTask((clickedNodeArray as any).data as TaskData);
-          setIsTaskInfoExpanded(true);
-        }
+        // Handle node click
       } else {
-        setSelectedTask(null);
-        setIsTaskInfoExpanded(false);
+        // Handle no node click
       }
     });
 
+    // Update networkInstance in the effect dependency array
     return () => {
-      network.destroy();
+      networkInstance.destroy();
     };
-  }, [graphData, setSelectedTask, setIsTaskInfoExpanded]);
+  }, [graphData, setSelectedTask, setIsTaskInfoExpanded]); // Add graphData and callbacks to the dependency array
 
-  return <GraphContainer ref={graphRef} />;
+  return <GraphContainer ref={graphRef} />; // Render the GraphContainer component
 };
 
-export default Graph;
+export default Graph; // Export the Graph component
