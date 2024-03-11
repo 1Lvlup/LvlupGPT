@@ -1,24 +1,39 @@
+# Define a class named 'PaperclipFactory' that represents a paperclip production factory
 class PaperclipFactory:
+    # Initialize the class with a safety_threshold parameter
     def __init__(self, safety_threshold):
+        # Set the safety_threshold and safety_level instance variables
         self.safety_threshold = safety_threshold
-        self.safety_level = 1.0
+        self.safety_level = 1.0  # Assume the initial safety level is 100%
 
+    # Define a method named 'produce_paperclips' that simulates paperclip production
     def produce_paperclips(self, num_workers, num_hours):
+        # Check if the safety level is below the safety threshold
         if self.safety_level < self.safety_threshold:
+            # If so, raise an exception to halt production
             raise Exception("Production halted for safety reasons.")
 
-        # Simulate production
-        num_paperclips = num_workers * num_hours * 1000  # 1000 paperclips per worker per hour
-        self.safety_level -= 0.01  # Reduce safety level by 1% for each hour of production
+        # Calculate the number of paperclips produced based on the number of workers and hours
+        num_paperclips = num_workers * num_hours * 1000  # Assume a rate of 1000 paperclips per worker per hour
+
+        # Reduce the safety level by 1% for each hour of production
+        self.safety_level -= 0.01 * num_hours
+
+        # Return the number of paperclips produced
         return num_paperclips
 
 
-# Create a factory with a safety threshold of 0.5 (50% safety level)
+# Create a new instance of the 'PaperclipFactory' class with a safety threshold of 0.5 (50% safety level)
 factory = PaperclipFactory(safety_threshold=0.5)
 
-# Attempt to produce paperclips
+# Attempt to produce paperclips with 10 workers for 8 hours
 try:
+    # Call the 'produce_paperclips' method on the 'factory' instance
     num_paperclips = factory.produce_paperclips(num_workers=10, num_hours=8)
+
+    # Print the number of paperclips produced
     print(f"Produced {num_paperclips} paperclips.")
+
+# Catch any exceptions raised during production
 except Exception as e:
-    print(e)
+    # Print the exception message
