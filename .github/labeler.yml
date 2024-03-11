@@ -1,24 +1,63 @@
-projects:
-  - name: AutoGPT
-    changed_files:
-      - glob: "autogpts/autogpt/**"
+# This is a configuration file for a project with multiple components.
 
-  - name: Forge
-    changed_files:
-      - glob: "autogpts/forge/**"
+# Each component is represented by a dictionary in the 'projects' list.
+# The 'name' field is a string that identifies the component.
+# The 'changed_files' field is a list of dictionaries that specify the files that were changed for that component.
 
-  - name: Benchmark
-    changed_files:
-      - glob: "benchmark/**"
-
-  - name: Frontend
-    changed_files:
-      - glob: "frontend/**"
-
-  - name: Arena
-    changed_files:
-      - glob: "arena/**"
-
-  - name: Documentation
-    changed_files:
-      - glob: "docs/**"
+projects = [
+  {
+    # 'AutoGPT' is a component with multiple changed files.
+    # The 'changed_files' list uses the 'glob' key to specify a pattern for matching file paths.
+    'name': 'AutoGPT',
+    'changed_files': [
+      {
+        'glob': 'autogpts/autogpt/**'
+      }
+    ]
+  },
+  {
+    # 'Forge' is another component with multiple changed files.
+    'name': 'Forge',
+    'changed_files': [
+      {
+        'glob': 'autogpts/forge/**'
+      }
+    ]
+  },
+  {
+    # 'Benchmark' is a component with a single directory of changed files.
+    'name': 'Benchmark',
+    'changed_files': [
+      {
+        'glob': 'benchmark/**'
+      }
+    ]
+  },
+  {
+    # 'Frontend' is a component with a single directory of changed files.
+    'name': 'Frontend',
+    'changed_files': [
+      {
+        'glob': 'frontend/**'
+      }
+    ]
+  },
+  {
+    # 'Arena' is a component with a single directory of changed files.
+    'name': 'Arena',
+    'changed_files': [
+      {
+        'glob': 'arena/**'
+      }
+    ]
+  },
+  {
+    # 'Documentation' is a component with a single directory of changed files.
+    'name': 'Documentation',
+    'changed_files': [
+      {
+        'glob': 'docs/**'
+      }
+    ]
+  },
+]
