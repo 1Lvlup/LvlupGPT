@@ -1,9 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<!-- Defines the root element of the XML document, representing the workspace. -->
 <Workspace
    version = "1.0"
    xmlns="http://example.com/workspace">
+
+   <!-- Represents a reference to a file in the workspace. Contains the location and name of the file. -->
    <FileRef
       location = "http://example.com/file.txt"
       name="file.txt" />
 </Workspace>
-
