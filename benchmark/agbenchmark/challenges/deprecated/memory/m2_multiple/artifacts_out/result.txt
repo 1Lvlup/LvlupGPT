@@ -1,12 +1,12 @@
 # List of numbers
-numbers = [3145, 3791, 9317, 9471]
+numbers = [3145, 3791, 9317, 9471]  # Initialize a list of four positive integers
 
 # Calculate sum of numbers
-sum_of_numbers = sum(numbers)
+sum_of_numbers = sum(numbers)  # Use the built-in sum() function to calculate the sum of all numbers in the list
 
 # Calculate average of numbers
-average_of_numbers = sum_of_numbers / len(numbers)
+average_of_numbers = sum_of_numbers / len(numbers)  # Calculate the average by dividing the sum by the number of elements in the list
 
 # Print sum and average
-print("Sum:", sum_of_numbers)
-print("Average:", average_of_numbers)
+print("Sum:", sum_of_numbers)  # Print the calculated sum with a descriptive label
+print("Average:", average_of_numbers)  # Print the calculated average with a descriptive label
