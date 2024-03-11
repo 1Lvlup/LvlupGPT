@@ -1,21 +1,10 @@
+# This list contains various large numbers representing millions
 numbers = [15, 112, 117, 204, 413, 2014, 3198, 4046, 7000, 11759, 21461, 24578, 31536, 53823, 81462]
+
+# The sort() method sorts the list in ascending order
 numbers.sort()
+
+# This for loop iterates through each number in the sorted list
 for number in numbers:
+    # The print() function outputs each number followed by the string "Millions"
     print(number, "Millions")
-
-
-15 Millions
-112 Millions
-117 Millions
-204 Millions
-413 Millions
-2014 Millions
-3198 Millions
-4046 Millions
-7000 Millions
-11759 Millions
-21461 Millions
-24578 Millions
-31536 Millions
-53823 Millions
-81462 Millions
