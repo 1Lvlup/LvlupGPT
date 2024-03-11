@@ -3,17 +3,28 @@ import requests
 from time import sleep
 from datetime import datetime, timezone, timedelta
 
+# The URL for the benchmark API
 URL_BENCHMARK = "http://localhost:8080/ap/v1"
+# The URL for the agent API
 URL_AGENT = "http://localhost:8000/ap/v1"
 
 @pytest.fixture
 def unique_eval_id():
+    """
+    Generate a unique evaluation ID based on the current time.
+    """
     return f"{datetime.now(timezone.utc):%Y%m%d%H%M%S%f}"[:-3]
 
 def get_task_id(response):
+    """
+    Extract the task ID from the response JSON.
+    """
     return response.json()["task_id"]
 
 def post_request_retry(url, json, retries=3, delay=1):
+    """
+    Send a POST request to the specified URL with the given JSON data, retrying up to the specified number of times if a non-200 status code is received.
+    """
     for i in range(retries):
         response = requests.post(url, json=json)
         if response.status_code == 200:
@@ -24,6 +35,9 @@ def post_request_retry(url, json, retries=3, delay=1):
     raise Exception(f"Request failed after {retries} retries")
 
 def get_request_retry(url, retries=3, delay=1):
+    """
+    Send a GET request to the specified URL, retrying up to the specified number of times if a non-200 status code is received.
+    """
     for i in range(retries):
         response = requests.get(url)
         if response.status_code == 200:
@@ -53,6 +67,9 @@ def get_request_retry(url, retries=3, delay=1):
 def test_entire_workflow(
     unique_eval_id, input_text, expected_artifact_length, test_name, should_be_successful, requests_retry_session
 ):
+    """
+    Test the entire workflow with the given input text, expected artifact length, test name, and whether the test should be successful.
+    """
     task_request = {"eval_id": unique_eval_id, "input": input_text}
 
     # First POST request
@@ -92,4 +109,5 @@ def test_entire_workflow(
     eval_response = response.json()
     print("eval_response")
     print(eval_response)
-    assert eval_response["run_details"]["test_name"] == test
+    # Check if the test name matches
+    assert eval_response["run_details"]["test_name"] == test_name
