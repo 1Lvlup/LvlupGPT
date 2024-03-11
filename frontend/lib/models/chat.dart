@@ -3,12 +3,25 @@ import 'package:auto_gpt_flutter_client/models/message_type.dart';
 
 /// Represents a chat message related to a specific task.
 class Chat {
+  /// The unique identifier of the chat message.
   final String id;
+
+  /// The identifier of the task associated with the chat message.
   final String taskId;
+
+  /// The content of the chat message.
   final String message;
+
+  /// The timestamp of when the chat message was created.
   final DateTime timestamp;
+
+  /// The type of the chat message.
   final MessageType messageType;
+
+  /// Additional JSON response related to the chat message, if any.
   final Map<String, dynamic>? jsonResponse;
+
+  /// The list of artifacts associated with the chat message.
   final List<Artifact> artifacts;
 
   Chat({
@@ -21,7 +34,7 @@ class Chat {
     required this.artifacts,
   });
 
-  // Convert a Map (usually from JSON) to a Chat object
+  /// Creates a new Chat object from a JSON map.
   factory Chat.fromMap(Map<String, dynamic> map) {
     return Chat(
       id: map['id'],
@@ -37,6 +50,7 @@ class Chat {
     );
   }
 
+  /// Checks if this Chat object is equal to another object.
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -49,6 +63,7 @@ class Chat {
           messageType == other.messageType &&
           artifacts == other.artifacts;
 
+  /// Calculates the hash code for this Chat object.
   @override
   int get hashCode =>
       id.hashCode ^
@@ -58,7 +73,9 @@ class Chat {
       messageType.hashCode ^
       artifacts.hashCode;
 
+  /// Returns a string representation of this Chat object.
   @override
   String toString() =>
       'Chat(id: $id, taskId: $taskId, message: $message, timestamp: $timestamp, messageType: $messageType, artifacts: $artifacts)'; // Added artifacts in toString method
 }
+
