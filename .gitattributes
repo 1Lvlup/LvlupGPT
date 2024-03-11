@@ -1,3 +1,10 @@
+# This is a bash script that ignores certain files and directories in the frontend/build directory
+# and the poetry.lock file in the root directory from being processed by a language analysis tool called 'linguist'.
+
+# The first line specifies the directory and files to be ignored, which are:
+# - all files in the frontend/build directory
+# - all files with the extension 'linguist-generated' in any directory
 frontend/build/* linguist-generated
 
+# The second line specifies the poetry.lock file in the root directory to be ignored
 **/poetry.lock linguist-generated
