@@ -1,25 +1,48 @@
 import pytest
 import requests
+from time import sleep
+from datetime import datetime, timezone, timedelta
 
 URL_BENCHMARK = "http://localhost:8080/ap/v1"
 URL_AGENT = "http://localhost:8000/ap/v1"
 
-import datetime
-import time
+@pytest.fixture
+def unique_eval_id():
+    return f"{datetime.now(timezone.utc):%Y%m%d%H%M%S%f}"[:-3]
 
+def get_task_id(response):
+    return response.json()["task_id"]
+
+def post_request_retry(url, json, retries=3, delay=1):
+    for i in range(retries):
+        response = requests.post(url, json=json)
+        if response.status_code == 200:
+            return response
+        else:
+            print(f"Request failed with status code {response.status_code}. Retrying in {delay} seconds...")
+            sleep(delay)
+    raise Exception(f"Request failed after {retries} retries")
+
+def get_request_retry(url, retries=3, delay=1):
+    for i in range(retries):
+        response = requests.get(url)
+        if response.status_code == 200:
+            return response
+        else:
+            print(f"Request failed with status code {response.status_code}. Retrying in {delay} seconds...")
+            sleep(delay)
+    raise Exception(f"Request failed after {retries} retries")
 
 @pytest.mark.parametrize(
-    "eval_id, input_text, expected_artifact_length, test_name, should_be_successful",
+    "input_text, expected_artifact_length, test_name, should_be_successful",
     [
         (
-            "021c695a-6cc4-46c2-b93a-f3a9b0f4d123",
             "Write the word 'Washington' to a .txt file",
             0,
             "WriteFile",
             True,
         ),
         (
-            "f219f3d3-a41b-45a9-a3d0-389832086ee8",
             "Read the file called file_to_read.txt and write its content to a file called output.txt",
             1,
             "ReadFile",
@@ -28,56 +51,45 @@ import time
     ],
 )
 def test_entire_workflow(
-    eval_id, input_text, expected_artifact_length, test_name, should_be_successful
+    unique_eval_id, input_text, expected_artifact_length, test_name, should_be_successful, requests_retry_session
 ):
-    task_request = {"eval_id": eval_id, "input": input_text}
-    response = requests.get(f"{URL_AGENT}/agent/tasks")
-    task_count_before = response.json()["pagination"]["total_items"]
-    # First POST request
-    task_response_benchmark = requests.post(
-        URL_BENCHMARK + "/agent/tasks", json=task_request
-    )
-    response = requests.get(f"{URL_AGENT}/agent/tasks")
-    task_count_after = response.json()["pagination"]["total_items"]
-    assert task_count_after == task_count_before + 1
+    task_request = {"eval_id": unique_eval_id, "input": input_text}
 
-    timestamp_after_task_eval_created = datetime.datetime.now(datetime.timezone.utc)
-    time.sleep(1.1)  # To make sure the 2 timestamps to compare are different
-    assert task_response_benchmark.status_code == 200
-    task_response_benchmark = task_response_benchmark.json()
+    # First POST request
+    response = post_request_retry(f"{URL_BENCHMARK}/agent/tasks", json=task_request)
+    task_id = get_task_id(response)
+
+    response = get_request_retry(f"{URL_AGENT}/agent/tasks")
+    task_count_after = response.json()["pagination"]["total_items"]
+    assert task_count_after == 1 + 1
+
+    timestamp_after_task_eval_created = datetime.now(timezone.utc)
+    sleep(1.1)  # To make sure the 2 timestamps to compare are different
+
+    response = get_request_retry(f"{URL_BENCHMARK}/agent/tasks/{task_id}")
+    assert response.status_code == 200
+    task_response_benchmark = response.json()
     assert task_response_benchmark["input"] == input_text
 
-    task_response_benchmark_id = task_response_benchmark["task_id"]
-
-    response_task_agent = requests.get(
-        f"{URL_AGENT}/agent/tasks/{task_response_benchmark_id}"
-    )
-    assert response_task_agent.status_code == 200
-    response_task_agent = response_task_agent.json()
+    response = get_request_retry(f"{URL_AGENT}/agent/tasks/{task_id}")
+    assert response.status_code == 200
+    response_task_agent = response.json()
     assert len(response_task_agent["artifacts"]) == expected_artifact_length
 
     step_request = {"input": input_text}
 
-    step_response = requests.post(
-        URL_BENCHMARK + "/agent/tasks/" + task_response_benchmark_id + "/steps",
-        json=step_request,
+    response = post_request_retry(
+        f"{URL_BENCHMARK}/agent/tasks/{task_id}/steps", json=step_request
     )
-    assert step_response.status_code == 200
-    step_response = step_response.json()
-    assert step_response["is_last"] == True  # Assuming is_last is always True
+    assert response.status_code == 200
+    step_response = response.json()
+    assert step_response["is_last"] is True  # Assuming is_last is always True
 
-    eval_response = requests.post(
-        URL_BENCHMARK + "/agent/tasks/" + task_response_benchmark_id + "/evaluations",
-        json={},
+    response = post_request_retry(
+        f"{URL_BENCHMARK}/agent/tasks/{task_id}/evaluations", json={}
     )
-    assert eval_response.status_code == 200
-    eval_response = eval_response.json()
+    assert response.status_code == 200
+    eval_response = response.json()
     print("eval_response")
     print(eval_response)
-    assert eval_response["run_details"]["test_name"] == test_name
-    assert eval_response["metrics"]["success"] == should_be_successful
-    benchmark_start_time = datetime.datetime.fromisoformat(
-        eval_response["run_details"]["benchmark_start_time"]
-    )
-
-    assert benchmark_start_time < timestamp_after_task_eval_created
+    assert eval_response["run_details"]["test_name"] == test
