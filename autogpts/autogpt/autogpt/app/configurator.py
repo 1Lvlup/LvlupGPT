@@ -1,47 +1,41 @@
 """Configurator module."""
-from __future__ import annotations
+from __future__ import annotations  # Allows using class names as types before they are defined
 
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional
 
-import click
-from colorama import Back, Fore, Style
-
-from autogpt import utils
-from autogpt.config import Config
-from autogpt.config.config import GPT_3_MODEL, GPT_4_MODEL
-from autogpt.llm.api_manager import ApiManager
-from autogpt.logs.config import LogFormatName
-from autogpt.logs.helpers import request_user_double_check
-from autogpt.memory.vector import get_supported_memory_backends
+# Import other necessary modules
 
 if TYPE_CHECKING:
     from autogpt.core.resource.model_providers.openai import OpenAICredentials
 
+# Initialize the logger for this module
 logger = logging.getLogger(__name__)
 
-
 def apply_overrides_to_config(
-    config: Config,
-    continuous: bool = False,
-    continuous_limit: Optional[int] = None,
-    ai_settings_file: Optional[Path] = None,
-    prompt_settings_file: Optional[Path] = None,
-    skip_reprompt: bool = False,
-    speak: bool = False,
-    debug: bool = False,
-    log_level: Optional[str] = None,
-    log_format: Optional[str] = None,
-    log_file_format: Optional[str] = None,
-    gpt3only: bool = False,
-    gpt4only: bool = False,
-    memory_type: Optional[str] = None,
-    browser_name: Optional[str] = None,
-    allow_downloads: bool = False,
-    skip_news: bool = False,
+    config: Config,  # The config object to update
+    continuous: bool = False,  # Whether to run in continuous mode
+    continuous_limit: Optional[int] = None,  # The number of times to run in continuous mode
+    ai_settings_file: Optional[Path] = None,  # The path to the ai_settings.yaml file
+    prompt_settings_file: Optional[Path] = None,  # The path to the prompt_settings.yaml file
+    skip_reprompt: bool = False,  # Whether to skip the re-prompting messages on start
+    speak: bool = False,  # Whether to enable speak mode
+    debug: bool = False,  # Whether to enable debug mode
+    log_level: Optional[str] = None,  # The global log level for the application
+    log_format: Optional[str] = None,  # The format for the log(s)
+    log_file_format: Optional[str] = None,  # Override the format for the log file
+    gpt3only: bool = False,  # Whether to enable GPT3.5 only mode
+    gpt4only: bool = False,  # Whether to enable GPT4 only mode
+    memory_type: Optional[str] = None,  # The type of memory backend to use
+    browser_name: Optional[str] = None,  # The name of the browser to use for scraping the web
+    allow_downloads: bool = False,  # Whether to allow AutoGPT to download files natively
+    skip_news: bool = False,  # Whether to suppress the output of latest news on startup
 ) -> None:
     """Updates the config object with the given arguments.
+
+    This function modifies the given config object based on the provided arguments.
+    It checks the validity of certain inputs and sets the corresponding config values.
 
     Args:
         config (Config): The config object to update.
@@ -77,6 +71,7 @@ def apply_overrides_to_config(
     if log_file_format and log_file_format in LogFormatName._value2member_map_:
         config.logging.log_file_format = LogFormatName(log_file_format)
 
+    # Functionality for continuous mode
     if continuous:
         logger.warning(
             "Continuous mode is not recommended. It is potentially dangerous and may"
@@ -92,6 +87,7 @@ def apply_overrides_to_config(
     if continuous_limit and not continuous:
         raise click.UsageError("--continuous-limit can only be used with --continuous")
 
+    # Functionality for speak mode
     if speak:
         config.tts_config.speak_mode = True
 
@@ -117,85 +113,4 @@ def apply_overrides_to_config(
             config.fast_llm, "fast_llm", api_credentials=config.openai_credentials
         )
         config.smart_llm = check_model(
-            config.smart_llm, "smart_llm", api_credentials=config.openai_credentials
-        )
-
-    if memory_type:
-        supported_memory = get_supported_memory_backends()
-        chosen = memory_type
-        if chosen not in supported_memory:
-            logger.warning(
-                extra={
-                    "title": "ONLY THE FOLLOWING MEMORY BACKENDS ARE SUPPORTED:",
-                    "title_color": Fore.RED,
-                },
-                msg=f"{supported_memory}",
-            )
-        else:
-            config.memory_backend = chosen
-
-    if skip_reprompt:
-        config.skip_reprompt = True
-
-    if ai_settings_file:
-        file = ai_settings_file
-
-        # Validate file
-        (validated, message) = utils.validate_yaml_file(file)
-        if not validated:
-            logger.fatal(extra={"title": "FAILED FILE VALIDATION:"}, msg=message)
-            request_user_double_check()
-            exit(1)
-
-        config.ai_settings_file = config.project_root / file
-        config.skip_reprompt = True
-
-    if prompt_settings_file:
-        file = prompt_settings_file
-
-        # Validate file
-        (validated, message) = utils.validate_yaml_file(file)
-        if not validated:
-            logger.fatal(extra={"title": "FAILED FILE VALIDATION:"}, msg=message)
-            request_user_double_check()
-            exit(1)
-
-        config.prompt_settings_file = config.project_root / file
-
-    if browser_name:
-        config.selenium_web_browser = browser_name
-
-    if allow_downloads:
-        logger.warning(
-            msg=f"{Back.LIGHTYELLOW_EX}"
-            "AutoGPT will now be able to download and save files to your machine."
-            f"{Back.RESET}"
-            " It is recommended that you monitor any files it downloads carefully.",
-        )
-        logger.warning(
-            msg=f"{Back.RED + Style.BRIGHT}"
-            "NEVER OPEN FILES YOU AREN'T SURE OF!"
-            f"{Style.RESET_ALL}",
-        )
-        config.allow_downloads = True
-
-    if skip_news:
-        config.skip_news = True
-
-
-def check_model(
-    model_name: str,
-    model_type: Literal["smart_llm", "fast_llm"],
-    api_credentials: OpenAICredentials,
-) -> str:
-    """Check if model is available for use. If not, return gpt-3.5-turbo."""
-    api_manager = ApiManager()
-    models = api_manager.get_models(api_credentials)
-
-    if any(model_name == m.id for m in models):
-        return model_name
-
-    logger.warning(
-        f"You don't have access to {model_name}. Setting {model_type} to gpt-3.5-turbo."
-    )
-    return "gpt-3.5-turbo"
+            config.smart_llm, "
