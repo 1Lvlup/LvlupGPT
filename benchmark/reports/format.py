@@ -5,12 +5,15 @@ from typing import Dict, List, Optional
 
 from agbenchmark.reports.processing.report_types import Report, Test
 
-
 @click.command()
 @click.argument("report_json_file", type=click.Path(exists=True, dir_okay=False))
 def print_markdown_report(report_json_file: str):
     """
     Generates a Markdown report from a given report.json file.
+    This function uses the `click` library to create a command line interface.
+    The `@click.command()` decorator defines the command and its arguments.
+    Here, the command is `print_markdown_report` and it takes one argument,
+    `report_json_file`, which is the path to the report JSON file.
     """
     report = Report.parse_file(report_json_file)
 
@@ -127,7 +130,4 @@ def print_summary(tests: Dict[str, Test]):
     click.echo(f"- **`{unreliable}` unreliable** {'⚠️'*unreliable}")
 
 
-def get_test_status_counts(tests: Dict[str, Test]) -> tuple[int, int, int]:
-    """Returns the count of successful, failed, and unreliable tests."""
-
-    successful, failed, unreliable = 0
+def get_test_status_counts(tests: Dict[str,
