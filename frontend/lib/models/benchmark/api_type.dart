@@ -1,11 +1,32 @@
+/**
+ * Defines the available types of APIs that can be handled by the system.
+ */
 enum ApiType {
+  /**
+   * Represents the agent API type.
+   */
   Agent = 'agent',
+
+  /**
+   * Represents the benchmark API type.
+   */
   Benchmark = 'benchmark',
+
+  /**
+   * Represents the leaderboard API type.
+   */
   Leaderboard = 'leaderboard',
+
+  /**
+   * Represents an unknown API type.
+   */
   Unknown = 'unknown',
 }
 
-// Usage example:
+/**
+ * Handles the provided API type by executing the appropriate logic for each type.
+ * @param {ApiType} type - The API type to be handled.
+ */
 function handleApiType(type: ApiType) {
   switch (type) {
     case ApiType.Agent:
