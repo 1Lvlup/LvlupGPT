@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 import click
+from typing import Dict, List, Optional
 
-from agbenchmark.reports.processing.report_types import Report
+from agbenchmark.reports.processing.report_types import Report, Test
 
 
 @click.command()
@@ -10,13 +11,17 @@ from agbenchmark.reports.processing.report_types import Report
 def print_markdown_report(report_json_file: str):
     """
     Generates a Markdown report from a given report.json file.
-
-    :param report_json_file: Path to the report.json file.
-    :return: A string containing the Markdown formatted report.
     """
     report = Report.parse_file(report_json_file)
 
-    # Header and metadata
+    print_header_metadata(report)
+    print_test_results(report.tests)
+    print_summary(report.tests)
+
+
+def print_header_metadata(report: Report):
+    """Prints the header and metadata of the report."""
+
     click.echo(f"# Benchmark Report")
     click.echo(f"- ⌛ **Run time:** `{report.metrics.run_time}`")
     click.echo(
@@ -35,34 +40,18 @@ def print_markdown_report(report_json_file: str):
 
     click.echo()  # spacing
 
-    # Aggregate information
-    successful, failed, unreliable = [], [], []
-    for test in report.tests.values():
-        test.metrics.success_percentage = (
-            rsp
-            if (rsp := test.metrics.success_percentage) is not None
-            else sum(float(r.success or 0) for r in test.results)
-            * 100
-            / len(test.results)
-        )
-        if test.metrics.success_percentage == 100.0:
-            successful.append(test)
-        elif test.metrics.success_percentage == 0.0:
-            failed.append(test)
-        else:
-            unreliable.append(test)
 
-    # Summary
-    click.echo("## Summary")
-    click.echo(f"- **`{len(successful)}` passed** {'✅'*len(successful)}")
-    click.echo(f"- **`{len(failed)}` failed** {'❌'*len(failed)}")
-    click.echo(f"- **`{len(unreliable)}` unreliable** {'⚠️'*len(unreliable)}")
+def print_test_results(tests: Dict[str, Test]):
+    """Prints the test results."""
 
-    click.echo()  # spacing
-
-    # Test results
     click.echo("## Challenges")
-    for test_name, test in report.tests.items():
+    for test in tests.values():
+        print_test_result(test)
+
+
+def print_test_result(test: Test):
+    """Prints the result of a single test."""
+
         click.echo()  # spacing
 
         result_indicator = (
@@ -73,7 +62,7 @@ def print_markdown_report(report_json_file: str):
             else "❌"
         )
         click.echo(
-            f"### {test_name} {result_indicator if test.metrics.attempted else '❔'}"
+            f"### {test.name} {result_indicator if test.metrics.attempted else '❔'}"
         )
         click.echo(f"{test.description}")
 
@@ -125,15 +114,20 @@ def print_markdown_report(report_json_file: str):
                 click.echo("\n</details>")
 
 
-def indent(indent: str, text: str, prefix_indent: bool = True) -> str:
-    return (indent if prefix_indent else "") + text.replace("\n", "\n" + indent)
+def print_summary(tests: Dict[str, Test]):
+    """Prints the summary of the test results."""
+
+    click.echo()  # spacing
+    click.echo("## Summary")
+
+    successful, failed, unreliable = get_test_status_counts(tests)
+
+    click.echo(f"- **`{successful}` passed** {'✅'*successful}")
+    click.echo(f"- **`{failed}` failed** {'❌'*failed}")
+    click.echo(f"- **`{unreliable}` unreliable** {'⚠️'*unreliable}")
 
 
-def quantify(noun: str, count: int, plural_suffix: str = "s") -> str:
-    if count == 1:
-        return f"{count} {noun}"
-    return f"{count} {noun}{plural_suffix}"
+def get_test_status_counts(tests: Dict[str, Test]) -> tuple[int, int, int]:
+    """Returns the count of successful, failed, and unreliable tests."""
 
-
-if __name__ == "__main__":
-    print_markdown_report()
+    successful, failed, unreliable = 0
