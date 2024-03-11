@@ -1,4 +1,5 @@
 // TODO: Remove the ability to have null values when benchmark implementation is complete
+
 /// `RepositoryInfo` encapsulates details about the repository and team associated with a benchmark run.
 ///
 /// This class contains essential information like the repository URL, team name, and the Git commit SHA for both the benchmark and the agent.
@@ -35,11 +36,16 @@ class RepositoryInfo {
   /// Returns a new `RepositoryInfo` populated with values from the map.
   factory RepositoryInfo.fromJson(Map<String, dynamic> json) => RepositoryInfo(
         repoUrl: json['repo_url'] ??
-            'https://github.com/Significant-Gravitas/AutoGPT',
-        teamName: json['team_name'] ?? 'placeholder',
+            'https://github.com/Significant-Gravitas/AutoGPT' - Default repository URL for the benchmark.
+            This value will be replaced once the benchmark implementation is complete.
+            Currently, it is set to the AutoGPT repository as a placeholder.
+        teamName: json['team_name'] ?? 'placeholder' - Default team name placeholder.
+            This value will be replaced once the benchmark implementation is complete.
         benchmarkGitCommitSha:
-            json['benchmark_git_commit_sha'] ?? 'placeholder',
-        agentGitCommitSha: json['agent_git_commit_sha'] ?? 'placeholder',
+            json['benchmark_git_commit_sha'] ?? 'placeholder' - Default Git commit SHA placeholder.
+            This value will be replaced once the benchmark implementation is complete.
+        agentGitCommitSha: json['agent_git_commit_sha'] ?? 'placeholder' - Default Git commit SHA placeholder.
+            This value will be replaced once the benchmark implementation is complete.
       );
 
   /// Converts the `RepositoryInfo` instance to a map.
@@ -52,3 +58,4 @@ class RepositoryInfo {
         'agent_git_commit_sha': agentGitCommitSha,
       };
 }
+
