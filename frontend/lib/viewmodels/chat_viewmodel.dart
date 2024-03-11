@@ -7,25 +7,47 @@ import 'package:auto_gpt_flutter_client/models/chat.dart';
 import 'package:auto_gpt_flutter_client/models/message_type.dart';
 
 class ChatViewModel with ChangeNotifier {
+  // The ChatService instance used for interacting with the chat API.
   final ChatService _chatService;
-  List<Chat> _chats = [];
+
+  // The list of chats for the current task.
+  List<Chat> _chats;
+
+  // The ID of the current task.
   String? _currentTaskId;
+
+  // The instance of SharedPreferencesService for managing shared preferences.
   final SharedPreferencesService _prefsService;
 
-  bool _isWaitingForAgentResponse = false;
-  bool _isContinuousMode = false;
+  // A flag indicating whether the view model is waiting for an agent response.
+  bool _isWaitingForAgentResponse;
 
+  // A flag indicating whether the continuous mode is enabled.
+  bool _isContinuousMode;
+
+  // Constructor for ChatViewModel with required dependencies.
+  ChatViewModel(this._chatService, this._prefsService) {
+    _chats = [];
+    _isWaitingForAgentResponse = false;
+    _isContinuousMode = false;
+  }
+
+  // Getter for isWaitingForAgentResponse.
   bool get isWaitingForAgentResponse => _isWaitingForAgentResponse;
+
+  // Getter for isContinuousMode.
   bool get isContinuousMode => _isContinuousMode;
 
+  // Getter for prefsService.
   SharedPreferencesService get prefsService => _prefsService;
 
-  ChatViewModel(this._chatService, this._prefsService);
-
+  // Getter for chats.
   List<Chat> get chats => _chats;
 
+  // Getter for currentTaskId.
   String? get currentTaskId => _currentTaskId;
 
+  // Setter for currentTaskId.
   void setCurrentTaskId(String taskId) {
     if (_currentTaskId != taskId) {
       _currentTaskId = taskId;
@@ -36,12 +58,14 @@ class ChatViewModel with ChangeNotifier {
     }
   }
 
+  // Clear the current task and chats.
   void clearCurrentTaskAndChats() {
     _currentTaskId = null;
     _chats.clear();
     notifyListeners();
   }
 
+  // Fetch chats for the current task.
   void fetchChatsForTask() async {
     if (_currentTaskId == null) {
       print("Error: Task ID is not set.");
@@ -51,6 +75,7 @@ class ChatViewModel with ChangeNotifier {
       final stepsResponse =
           await _chatService.listTaskSteps(_currentTaskId!, pageSize: 10000);
 
+      // Process the steps and create Chat instances.
       final stepsJsonList = stepsResponse['steps'] ?? [];
 
       List<Step> steps =
@@ -64,6 +89,7 @@ class ChatViewModel with ChangeNotifier {
         Step step = steps[i];
 
         if (step.input.isNotEmpty) {
+          // Add user chat.
           chats.add(Chat(
               id: step.stepId,
               taskId: step.taskId,
@@ -73,6 +99,7 @@ class ChatViewModel with ChangeNotifier {
               artifacts: step.artifacts));
         }
 
+        // Add agent chat.
         chats.add(Chat(
             id: step.stepId,
             taskId: step.taskId,
@@ -97,6 +124,7 @@ class ChatViewModel with ChangeNotifier {
     }
   }
 
+  // Send a chat message and handle the response.
   void sendChatMessage(String? message,
       {required int continuousModeSteps, int currentStep = 1}) async {
     if (_currentTaskId == null) {
@@ -115,6 +143,7 @@ class ChatViewModel with ChangeNotifier {
       Step executedStep = Step.fromMap(executedStepResponse);
 
       if (executedStep.input.isNotEmpty) {
+        // Add user chat.
         final userChat = Chat(
             id: executedStep.stepId,
             taskId: executedStep.taskId,
@@ -126,6 +155,7 @@ class ChatViewModel with ChangeNotifier {
         _chats.add(userChat);
       }
 
+      // Add agent chat.
       final agentChat = Chat(
           id: executedStep.stepId,
           taskId: executedStep.taskId,
@@ -136,42 +166,4 @@ class ChatViewModel with ChangeNotifier {
           artifacts: executedStep.artifacts);
 
       _chats.add(agentChat);
-
-      removeTemporaryMessage();
-
-      notifyListeners();
-
-      if (_isContinuousMode && !executedStep.isLast) {
-        if (currentStep < continuousModeSteps) {
-          sendChatMessage(null,
-              continuousModeSteps: continuousModeSteps,
-              currentStep: currentStep + 1);
-        } else {
-          _isContinuousMode = false;
-        }
-      }
-
-      print("Chats added for task ID: $_currentTaskId");
-    } catch (e) {
-      removeTemporaryMessage();
-      rethrow;
-      // TODO: Handle additional error scenarios or log them as required
-    } finally {
-      _isWaitingForAgentResponse = false;
-      notifyListeners();
-    }
-  }
-
-  void addTemporaryMessage(String message) {
-    Chat tempMessage = Chat(
-        id: "TEMP_ID",
-        taskId: "TEMP_ID",
-        message: message,
-        timestamp: DateTime.now(),
-        messageType: MessageType.user,
-        artifacts: []);
-
-    _chats.add(tempMessage);
-    notifyListeners();
-  }
 
