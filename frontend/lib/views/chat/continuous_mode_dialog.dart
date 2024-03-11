@@ -1,14 +1,16 @@
-import 'package:auto_gpt_flutter_client/constants/app_colors.dart';
+import 'package:auto\_gpt\_flutter\_client/constants/app\_colors.dart';
 import 'package:flutter/material.dart';
 
+/// A dialog that appears when the user attempts to dismiss the continuous mode dialog.
+/// It informs the user that they cannot dismiss the dialog and provides a red exclamation mark icon.
 class ContinuousModeDialog extends StatefulWidget {
-  final VoidCallback? onProceed;
-  final ValueChanged<bool>? onCheckboxChanged;
-  final String title;
-  final String content;
-  final String proceedButtonText;
-  final String cancelButtonText;
-
+// Constructor for ContinuousModeDialog, which takes several parameters:
+// - onProceed: A callback function that is called when the user taps the "Proceed" button.
+// - onCheckboxChanged: A callback function that is called when the user toggles the "Don't ask again" checkbox.
+// - title: The title of the dialog.
+// - content: The main content of the dialog.
+// - proceedButtonText: The text for the "Proceed" button.
+// - cancelButtonText: The text for the "Cancel" button.
   const ContinuousModeDialog({
     Key? key,
     this.onProceed,
@@ -23,13 +25,15 @@ class ContinuousModeDialog extends StatefulWidget {
   _ContinuousModeDialogState createState() => _ContinuousModeDialogState();
 }
 
+/// State for the ContinuousModeDialog widget.
 class _ContinuousModeDialogState extends State<ContinuousModeDialog> {
-  bool _attemptedToDismiss = false;
-  bool _checkboxValue = false;
+  bool _attemptedToDismiss = false; // Tracks whether the user has attempted to dismiss the dialog.
+  bool _checkboxValue = false; // Tracks the value of the "Don't ask again" checkbox.
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
+      // Prevents the user from dismissing the dialog by pressing the back button.
       onWillPop: () async {
         setState(() {
           _attemptedToDismiss = true;
@@ -151,20 +155,4 @@ class _ContinuousModeDialogState extends State<ContinuousModeDialog> {
                     },
                   ),
                   const Text(
-                    "Don't ask again",
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 11,
-                      fontFamily: 'Archivo',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+                    "
