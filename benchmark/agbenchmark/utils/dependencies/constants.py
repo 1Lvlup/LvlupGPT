@@ -1,12 +1,18 @@
-"""Module constants for test markers."""
+"""Module constants for test markers.
 
-# Marker name
+This module contains constants used for defining test markers in a test suite.
+"""
+
+# Marker name: The name of the marker used to identify dependent tests
 MARKER_NAME = "depends"
 
-# Keyword arguments for the marker
+# Marker keywords: A dictionary of keyword arguments for the marker
 MARKER_KWARGS = {
-    "names": "Custom names for the tests",
-    "depends_on": "Tests to depend on"
+    # The 'names' keyword argument represents custom names for the tests
+    "names": "Custom names for the tests. Default is 'test'.",
+    
+    # The 'depends_on' keyword argument represents tests to depend on
+    "depends_on": "Tests to depend on. Default is ()."
 }
 
 # Default value for the 'names' keyword argument
