@@ -8,7 +8,7 @@ import ftfy
 import numpy as np
 from pydantic import BaseModel
 
-from autogpt.config import Config
+import autogpt.config  # Importing the config module
 from autogpt.core.resource.model_providers import (
     ChatMessage,
     ChatModelProvider,
@@ -16,10 +16,11 @@ from autogpt.core.resource.model_providers import (
 )
 from autogpt.processing.text import chunk_content, split_text, summarize_text
 
-from .utils import Embedding, get_embedding
+from .utils import Embedding, get_embedding  # Importing the Embedding class and get_embedding function
 
 logger = logging.getLogger(__name__)
 
+# Define MemoryDocType as an enumeration representing different types of memory items
 MemoryDocType = Literal["webpage", "text_file", "code_file", "agent_history"]
 
 
@@ -127,159 +128,4 @@ class MemoryItemFactory:
                     text=text_chunk,
                     instruction=how_to_summarize,
                     question=question_for_summary,
-                    llm_provider=self.llm_provider,
-                    config=config,
-                )
-                for text_chunk in chunks
-            ]
-        ]
-        logger.debug("Chunk summaries: " + str(chunk_summaries))
-
-        e_chunks = get_embedding(chunks, config, self.embedding_provider)
-
-        summary = (
-            chunk_summaries[0]
-            if len(chunks) == 1
-            else (
-                await summarize_text(
-                    text="\n\n".join(chunk_summaries),
-                    instruction=how_to_summarize,
-                    question=question_for_summary,
-                    llm_provider=self.llm_provider,
-                    config=config,
-                )
-            )[0]
-        )
-        logger.debug("Total summary: " + summary)
-
-        # TODO: investigate search performance of weighted average vs summary
-        # e_average = np.average(e_chunks, axis=0, weights=[len(c) for c in chunks])
-        e_summary = get_embedding(summary, config, self.embedding_provider)
-
-        metadata["source_type"] = source_type
-
-        return MemoryItem(
-            raw_content=text,
-            summary=summary,
-            chunks=chunks,
-            chunk_summaries=chunk_summaries,
-            e_summary=e_summary,
-            e_chunks=e_chunks,
-            metadata=metadata,
-        )
-
-    def from_text_file(self, content: str, path: str, config: Config):
-        return self.from_text(content, "text_file", config, {"location": path})
-
-    def from_code_file(self, content: str, path: str):
-        # TODO: implement tailored code memories
-        return self.from_text(content, "code_file", {"location": path})
-
-    def from_ai_action(self, ai_message: ChatMessage, result_message: ChatMessage):
-        # The result_message contains either user feedback
-        # or the result of the command specified in ai_message
-
-        if ai_message.role != "assistant":
-            raise ValueError(f"Invalid role on 'ai_message': {ai_message.role}")
-
-        result = (
-            result_message.content
-            if result_message.content.startswith("Command")
-            else "None"
-        )
-        user_input = (
-            result_message.content
-            if result_message.content.startswith("Human feedback")
-            else "None"
-        )
-        memory_content = (
-            f"Assistant Reply: {ai_message.content}"
-            "\n\n"
-            f"Result: {result}"
-            "\n\n"
-            f"Human Feedback: {user_input}"
-        )
-
-        return self.from_text(
-            text=memory_content,
-            source_type="agent_history",
-            how_to_summarize=(
-                "if possible, also make clear the link between the command in the"
-                " assistant's response and the command result. "
-                "Do not mention the human feedback if there is none.",
-            ),
-        )
-
-    def from_webpage(
-        self, content: str, url: str, config: Config, question: str | None = None
-    ):
-        return self.from_text(
-            text=content,
-            source_type="webpage",
-            config=config,
-            metadata={"location": url},
-            question_for_summary=question,
-        )
-
-
-class MemoryItemRelevance(BaseModel):
-    """
-    Class that encapsulates memory relevance search functionality and data.
-    Instances contain a MemoryItem and its relevance scores for a given query.
-    """
-
-    memory_item: MemoryItem
-    for_query: str
-    summary_relevance_score: float
-    chunk_relevance_scores: list[float]
-
-    @staticmethod
-    def of(
-        memory_item: MemoryItem, for_query: str, e_query: Embedding | None = None
-    ) -> MemoryItemRelevance:
-        e_query = e_query if e_query is not None else get_embedding(for_query)
-        _, srs, crs = MemoryItemRelevance.calculate_scores(memory_item, e_query)
-        return MemoryItemRelevance(
-            for_query=for_query,
-            memory_item=memory_item,
-            summary_relevance_score=srs,
-            chunk_relevance_scores=crs,
-        )
-
-    @staticmethod
-    def calculate_scores(
-        memory: MemoryItem, compare_to: Embedding
-    ) -> tuple[float, float, list[float]]:
-        """
-        Calculates similarity between given embedding and all embeddings of the memory
-
-        Returns:
-            float: the aggregate (max) relevance score of the memory
-            float: the relevance score of the memory summary
-            list: the relevance scores of the memory chunks
-        """
-        summary_relevance_score = np.dot(memory.e_summary, compare_to)
-        chunk_relevance_scores = np.dot(memory.e_chunks, compare_to).tolist()
-        logger.debug(f"Relevance of summary: {summary_relevance_score}")
-        logger.debug(f"Relevance of chunks: {chunk_relevance_scores}")
-
-        relevance_scores = [summary_relevance_score, *chunk_relevance_scores]
-        logger.debug(f"Relevance scores: {relevance_scores}")
-        return max(relevance_scores), summary_relevance_score, chunk_relevance_scores
-
-    @property
-    def score(self) -> float:
-        """The aggregate relevance score of the memory item for the given query"""
-        return max([self.summary_relevance_score, *self.chunk_relevance_scores])
-
-    @property
-    def most_relevant_chunk(self) -> tuple[str, float]:
-        """The most relevant chunk of the memory item + its score for the given query"""
-        i_relmax = np.argmax(self.chunk_relevance_scores)
-        return self.memory_item.chunks[i_relmax], self.chunk_relevance_scores[i_relmax]
-
-    def __str__(self):
-        return (
-            f"{self.memory_item.summary} ({self.summary_relevance_score}) "
-            f"{self.chunk_relevance_scores}"
-        )
+                    llm_
