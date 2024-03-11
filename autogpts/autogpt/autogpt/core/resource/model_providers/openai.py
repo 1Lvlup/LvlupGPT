@@ -1,15 +1,13 @@
-import enum
-import logging
-import math
-import os
-from pathlib import Path
-from typing import Any, Callable, Coroutine, Dict, Iterable, List, Optional, TypeVar
-
-import openai
-import tenacity
-import tiktoken
-import yaml
-from openai.error import APIError, RateLimitError
-from pydantic import BaseModel, SecretStr
-from typing_extensions import Literal, ParamSpec, TypeVar
-
+# Importing required libraries and modules
+import enum  # For creating custom enumerated types
+import logging  # For logging purposes
+import math  # For mathematical operations
+import os  # For interacting with the operating system
+from pathlib import Path  # For handling file paths
+from typing import (  # For type hinting
+    Any,
+    Callable,
+    Coroutine,
+    Dict,
+    Iterable,
+    List,
