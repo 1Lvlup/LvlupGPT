@@ -5,9 +5,17 @@ class StepRequestBody {
   StepRequestBody({required this.input, this.additionalInput});
 
   Map<String, dynamic> toJson() {
-    if (input == null && additionalInput == null) {
-      return {};
+    final data = <String, dynamic>{};
+    if (input != null) {
+      data['input'] = input;
     }
-    return {'input': input, 'additional_input': additionalInput};
+    if (additionalInput != null) {
+      data['additional_input'] = additionalInput;
+    }
+    return data;
   }
+
+  /// Returns `true` if both `input` and `additionalInput` are `null`.
+  bool get isEmpty => input == null && additionalInput == null;
 }
+
