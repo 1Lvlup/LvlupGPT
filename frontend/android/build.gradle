@@ -1,31 +1,49 @@
+// The buildscript block is used to configure the build script and its classpath.
 buildscript {
+    // The ext block is used to define variables that can be used throughout the build script.
     ext.kotlin_version = '1.7.10'
+
+    // The repositories block is used to define the repositories where dependencies can be found.
     repositories {
+        // The google repository is used for Android-related dependencies.
         google()
+        // The mavenCentral repository is used for general Java dependencies.
         mavenCentral()
     }
 
+    // The dependencies block is used to define the dependencies for the build script.
     dependencies {
+        // The classpath for the Android Gradle plugin is defined here.
         classpath 'com.android.tools.build:gradle:7.3.0'
+        // The classpath for the Kotlin Gradle plugin is defined here.
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
+// The allprojects block is used to apply the same configuration to all projects in the build.
 allprojects {
     repositories {
+        // The same repositories as defined in the buildscript block are used here.
         google()
         mavenCentral()
     }
 }
 
+// The rootProject.buildDir property is used to set the build directory for the root project.
 rootProject.buildDir = '../build'
+
+// The subprojects block is used to apply the same configuration to all subprojects of the root project.
 subprojects {
+    // The build directory for each subproject is set to be a subdirectory of the root project's build directory.
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
+
+// Another subprojects block is used to ensure that the evaluation of each subproject depends on the app project.
 subprojects {
     project.evaluationDependsOn(':app')
 }
 
+// A custom clean task is registered to delete the root project's build directory.
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
-}
+
