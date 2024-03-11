@@ -6,19 +6,23 @@ import 'dart:html' as html;
 
 /// Service class for performing chat-related operations.
 class ChatService {
-  final RestApiUtility api;
-
+  /// Creates an instance of the ChatService class.
+  ///
+  /// [api] is the RestApiUtility instance used for API calls.
   ChatService(this.api);
 
   /// Executes a step in a specific task.
   ///
   /// [taskId] is the ID of the task.
   /// [stepRequestBody] is a Map representing the request body for executing a step.
+  ///
+  /// Returns a Future that resolves to a Map containing the response data.
   Future<Map<String, dynamic>> executeStep(
       String taskId, StepRequestBody stepRequestBody) async {
     try {
-      return await api.post(
-          'agent/tasks/$taskId/steps', stepRequestBody.toJson());
+      // Makes a POST request to the API endpoint.
+      // Returns the decoded JSON response.
+      return await api.post('agent/tasks/$taskId/steps', stepRequestBody.toJson());
     } catch (e) {
       // TODO: We are bubbling up the full response. Revisit this.
       rethrow;
@@ -29,9 +33,13 @@ class ChatService {
   ///
   /// [taskId] is the ID of the task.
   /// [stepId] is the ID of the step.
+  ///
+  /// Returns a Future that resolves to a Map containing the response data.
   Future<Map<String, dynamic>> getStepDetails(
       String taskId, String stepId) async {
     try {
+      // Makes a GET request to the API endpoint.
+      // Returns the decoded JSON response.
       return await api.get('agent/tasks/$taskId/steps/$stepId');
     } catch (e) {
       throw Exception('Failed to get step details: $e');
@@ -42,9 +50,13 @@ class ChatService {
   ///
   /// [taskId] is the ID of the task.
   /// [currentPage] and [pageSize] are optional pagination parameters.
+  ///
+  /// Returns a Future that resolves to a Map containing the response data.
   Future<Map<String, dynamic>> listTaskSteps(String taskId,
       {int currentPage = 1, int pageSize = 10}) async {
     try {
+      // Makes a GET request to the API endpoint with pagination parameters.
+      // Returns the decoded JSON response.
       return await api.get(
           'agent/tasks/$taskId/steps?current_page=$currentPage&page_size=$pageSize');
     } catch (e) {
@@ -57,8 +69,11 @@ class ChatService {
   /// [taskId] is the ID of the task.
   /// [artifactFile] is the File to be uploaded.
   /// [uri] is the URI of the artifact.
+  ///
+  /// Returns a Future that resolves to a Map containing the response data.
   Future<Map<String, dynamic>> uploadArtifact(
       String taskId, File artifactFile, String uri) async {
+    // Placeholder implementation.
     return Future.value({'status': 'Not implemented yet'});
   }
 
@@ -66,26 +81,28 @@ class ChatService {
   ///
   /// [taskId] is the ID of the task.
   /// [artifactId] is the ID of the artifact.
+  ///
+  /// Throws an exception if there's an error during the download.
   Future<void> downloadArtifact(String taskId, String artifactId) async {
     try {
+      // Makes a GET request to the API endpoint to download the artifact.
+      // Converts the response to a Uint8List.
       final Uint8List bytes =
           await api.getBinary('agent/tasks/$taskId/artifacts/$artifactId');
 
-      // Create a blob from the Uint8List
+      // Creates a Blob from the Uint8List.
       final blob = html.Blob([bytes]);
 
-      // Generate a URL from the Blob
+      // Generates a URL from the Blob.
       final url = html.Url.createObjectUrlFromBlob(blob);
 
-      // Create an anchor HTML element
+      // Creates an anchor HTML element with the URL and downloads the artifact.
       final anchor = html.AnchorElement(href: url)
         ..setAttribute("download", "artifact_$artifactId")
         ..click();
 
-      // Cleanup: Revoke the object URL
+      // Cleanup: Revokes the object URL.
       html.Url.revokeObjectUrl(url);
     } catch (e) {
       throw Exception('An error occurred while downloading the artifact: $e');
-    }
-  }
-}
+   
