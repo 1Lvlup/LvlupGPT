@@ -1,4 +1,15 @@
-mkdocs
-mkdocs-material
-mkdocs-table-reader-plugin
-pymdown-extensions
+# MkDocs is a fast, simple and downright gorgeous static site generator that's perfect for building project documentation.
+# It is written in Python and is easy to use, customize and extend.
+package 'mkdocs'
+
+# MkDocs Material is a theme for MkDocs that is designed to be easy to customize, responsive, and look good on any screen size.
+# It includes a number of features such as syntax highlighting, math equations, and code highlighting.
+package 'mkdocs-material'
+
+# MkDocs Table Reader Plugin is a plugin for MkDocs that allows you to include tables from external files in your documentation.
+# This can be useful for including large tables that would be difficult to format directly in your documentation.
+package 'mkdocs-table-reader-plugin'
+
+# PyMdown Extensions is a collection of extensions for the Markdown parser written in Python, called Python-Markdown.
+# These extensions add additional functionality to the parser, such as support for task lists, tables, and strikethrough text.
+package 'pymdown-extensions'
