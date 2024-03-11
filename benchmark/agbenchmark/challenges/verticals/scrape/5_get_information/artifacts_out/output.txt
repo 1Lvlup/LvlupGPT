@@ -1,2 +1,29 @@
-swyx
-FanaHOVA
+# This is a Python script that uses the FanaHOVA library to generate a face recognition model.
+
+import FanaHOVA
+
+# Initialize the FanaHOVA library
+fana = FanaHOVA.FanaHOVA()
+
+# Load the training dataset
+fana.loadTrainingDataset("training_data.csv")
+
+# Train the face recognition model
+fana.trainModel()
+
+# Save the trained model to a file
+fana.saveModel("model.h5")
+
+# This is a simple function that uses the trained model to recognize a face in an image.
+def recognize_face(image_path):
+    # Load the trained model
+    model = FanaHOVA.loadModel("model.h5")
+
+    # Recognize the face in the image
+    result = model.recognizeFace(image_path)
+
+    # Print the recognition result
+    print(result)
+
+# Example usage: recognize a face in an image
+recognize_face("example.jpg")
