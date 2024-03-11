@@ -26,11 +26,11 @@ class RunDetails {
   /// [benchmarkStartTime]: The start time of the run.
   /// [testName]: The name of the test.
   RunDetails({
-    required this.runId,
-    required this.command,
-    required this.completionTime,
-    required this.benchmarkStartTime,
-    required this.testName,
+    required this.runId,    /// Assigns the unique identifier for the benchmark run.
+    required this.command,  /// Assigns the command used to initiate the run.
+    required this.completionTime,  /// Assigns the completion time of the run.
+    required this.benchmarkStartTime,  /// Assigns the start time of the run.
+    required this.testName,   /// Assigns the name of the test.
   });
 
   /// Creates a `RunDetails` instance from a map.
@@ -40,11 +40,11 @@ class RunDetails {
   /// Returns a new `RunDetails` populated with values from the map.
   factory RunDetails.fromJson(Map<String, dynamic> json) {
     return RunDetails(
-      runId: json['run_id'] as String,
-      command: json['command'] as String,
-      completionTime: DateTime.parse(json['completion_time'] as String),
-      benchmarkStartTime: DateTime.parse(json['benchmark_start_time'] as String),
-      testName: json['test_name'] as String,
+      runId: json['run_id'] as String,   /// Retrieves and assigns the run_id from the json map.
+      command: json['command'] as String,   /// Retrieves and assigns the command from the json map.
+      completionTime: DateTime.parse(json['completion_time'] as String),  /// Retrieves and assigns the completion_time from the json map.
+      benchmarkStartTime: DateTime.parse(json['benchmark_start_time'] as String),  /// Retrieves and assigns the benchmark_start_time from the json map.
+      testName: json['test_name'] as String,  /// Retrieves and assigns the test_name from the json map.
     );
   }
 
@@ -52,10 +52,10 @@ class RunDetails {
   ///
   /// Returns a map containing key-value pairs corresponding to `RunDetails` fields.
   Map<String, dynamic> toJson() => {
-        'run_id': runId,
-        'command': command,
-        'completion_time': completionTime.toIso8601String(),
-        'benchmark_start_time': benchmarkStartTime.toIso8601String(),
-        'test_name': testName,
+        'run_id': runId,  /// Adds the run_id to the map.
+        'command': command,  /// Adds the command to the map.
+        'completion_time': completionTime.toIso8601String(),  /// Adds the completion_time as an ISO 8601 string to the map.
+        'benchmark_start_time': benchmarkStartTime.toIso8601String(),  /// Adds the benchmark_start_time as an ISO 8601 string to the map.
+        'test_name': testName,  /// Adds the test_name to the map.
       };
 }
