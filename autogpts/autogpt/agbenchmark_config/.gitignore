@@ -1,3 +1,11 @@
-logs/
-reports/
-temp_folder/
+# logs/ - This directory will contain all of the application's log files.
+# These files can be used for debugging, monitoring, and analyzing the application's behavior.
+# It is recommended to regularly clean up this directory to avoid excessive disk usage.
+
+# reports/ - This directory will contain all of the application's generated reports.
+# These reports can be in various formats such as PDF, CSV, or HTML, and can be used to present
+# data and insights to stakeholders or for further analysis.
+
+# temp_folder/ - This directory will contain all of the application's temporary files.
+# These files are created during runtime and are not intended to be stored long-term.
+# The application should automatically clean up this directory periodically to avoid excessive disk usage.
