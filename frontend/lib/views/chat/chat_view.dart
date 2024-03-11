@@ -7,7 +7,6 @@ import 'package:auto_gpt_flutter_client/views/chat/chat_input_field.dart';
 import 'package:auto_gpt_flutter_client/views/chat/loading_indicator.dart';
 import 'package:auto_gpt_flutter_client/views/chat/user_message_tile.dart';
 import 'package:flutter/material.dart';
-import 'package:auto_gpt_flutter_client/viewmodels/chat_viewmodel.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -29,18 +28,12 @@ class _ChatViewState extends State<ChatView> {
   void initState() {
     super.initState();
 
-    // Listen for scroll events and determine whether the scroll is at the bottom
     _scrollController.addListener(() {
       if (_scrollController.position.atEdge) {
-        if (_scrollController.position.pixels == 0) {
-          _isAtBottom = false;
-        } else {
-          _isAtBottom = true;
-        }
+        _isAtBottom = _scrollController.position.pixels == 0;
       }
     });
 
-    // Schedule the fetchChatsForTask call for after the initial build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       widget.viewModel.fetchChatsForTask();
     });
@@ -48,7 +41,6 @@ class _ChatViewState extends State<ChatView> {
 
   @override
   void dispose() {
-    // Dispose of the ScrollController when the widget is removed
     _scrollController.dispose();
     super.dispose();
   }
@@ -63,12 +55,10 @@ class _ChatViewState extends State<ChatView> {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Do we want to have a reference to task view model in this class?
     final taskViewModel = Provider.of<TaskViewModel>(context, listen: true);
     return Scaffold(
       body: Column(
         children: [
-          // Chat messages list
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
@@ -76,39 +66,35 @@ class _ChatViewState extends State<ChatView> {
               itemBuilder: (context, index) {
                 final chat = widget.viewModel.chats[index];
 
-                // If the last message has been built and we're at the bottom of the list, scroll down
                 if (index == widget.viewModel.chats.length - 1 && _isAtBottom) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     _scrollToBottom();
                   });
                 }
 
-                if (chat.messageType == MessageType.user) {
-                  return UserMessageTile(message: chat.message);
-                } else {
-                  return AgentMessageTile(
-                    key: ValueKey(chat.id),
-                    chat: chat,
-                    onArtifactsButtonPressed: () {
-                      // Loop through each artifact and download it using the artifact_id
-                      for (var artifact in chat.artifacts) {
-                        widget.viewModel
-                            .downloadArtifact(chat.taskId, artifact.artifactId);
-                      }
-                    },
-                  );
-                }
+                return chat.messageType == MessageType.user
+                    ? UserMessageTile(message: chat.message)
+                    : AgentMessageTile(
+                        key: ValueKey(chat.id),
+                        chat: chat,
+                        onArtifactsButtonPressed: () {
+                          for (var artifact in chat.artifacts) {
+                            widget.viewModel.downloadArtifact(
+                                chat.taskId, artifact.artifactId);
+                          }
+                        },
+                      );
               },
             ),
           ),
           const SizedBox(height: 10),
           LoadingIndicator(
-              isLoading: Provider.of<TaskQueueViewModel>(context, listen: true)
-                      .isBenchmarkRunning ||
-                  widget.viewModel.isWaitingForAgentResponse ||
-                  taskViewModel.isWaitingForAgentResponse),
+            isLoading: Provider.of<TaskQueueViewModel>(context, listen: true)
+                    .isBenchmarkRunning ||
+                widget.viewModel.isWaitingForAgentResponse ||
+                taskViewModel.isWaitingForAgentResponse,
+          ),
           const SizedBox(height: 10),
-          // Input area
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: ChatInputField(
@@ -116,63 +102,41 @@ class _ChatViewState extends State<ChatView> {
                 widget.viewModel.addTemporaryMessage(message);
                 try {
                   if (widget.viewModel.currentTaskId != null) {
-                    widget.viewModel.sendChatMessage(
-                        (message == "") ? null : message,
-                        continuousModeSteps: Provider.of<SettingsViewModel>(
-                                context,
-                                listen: false)
-                            .continuousModeSteps);
+                    await widget.viewModel.sendChatMessage(
+                      message,
+                      continuousModeSteps:
+                          Provider.of<SettingsViewModel>(context, listen: false)
+                              .continuousModeSteps,
+                    );
                   } else {
-                    String newTaskId = await taskViewModel.createTask(message);
+                    final newTaskId =
+                        await taskViewModel.createTask(message);
                     widget.viewModel.setCurrentTaskId(newTaskId);
-                    widget.viewModel.sendChatMessage(
-                        (message == "") ? null : message,
-                        continuousModeSteps: Provider.of<SettingsViewModel>(
-                                context,
-                                listen: false)
-                            .continuousModeSteps);
+                    await widget.viewModel.sendChatMessage(
+                      message,
+                      continuousModeSteps:
+                          Provider.of<SettingsViewModel>(context, listen: false)
+                              .continuousModeSteps,
+                    );
                   }
                 } catch (response) {
-                  if (response is http.Response && response.statusCode == 404) {
+                  if (response is http.Response &&
+                      response.statusCode == 404) {
                     Fluttertoast.showToast(
-                        msg:
-                            "404 error: Please ensure the correct baseURL for your agent in \nthe settings and that your agent adheres to the agent protocol.",
-                        toastLength: Toast.LENGTH_LONG,
-                        gravity: ToastGravity.TOP,
-                        timeInSecForIosWeb: 5,
-                        backgroundColor: Colors.red,
-                        webPosition: "center",
-                        webBgColor:
-                            "linear-gradient(to right, #dc1c13, #dc1c13)",
-                        textColor: Colors.white,
-                        fontSize: 16.0);
+                      msg:
+                          "404 error: Please ensure the correct baseURL for your agent in \nthe settings and that your agent adheres to the agent protocol.",
+                      toastLength: Toast.LENGTH_LONG,
+                      gravity: ToastGravity.TOP,
+                      timeInSecForIosWeb: 5,
+                      backgroundColor: Colors.red,
+                      webPosition: "center",
+                      webBgColor:
+                          "linear-gradient(to right, #dc1c13, #dc1c13)",
+                      textColor: Colors.white,
+                      fontSize: 16.0,
+                    );
                   } else if (response is http.Response &&
                       response.statusCode >= 500 &&
                       response.statusCode < 600) {
                     Fluttertoast.showToast(
-                        msg: "500 error: Something went wrong",
-                        toastLength: Toast.LENGTH_LONG,
-                        gravity: ToastGravity.TOP,
-                        timeInSecForIosWeb: 5,
-                        backgroundColor: Colors.red,
-                        webPosition: "center",
-                        webBgColor:
-                            "linear-gradient(to right, #dc1c13, #dc1c13)",
-                        textColor: Colors.white,
-                        fontSize: 16.0);
-                  }
-                }
-              },
-              onContinuousModePressed: () {
-                widget.viewModel.isContinuousMode =
-                    !widget.viewModel.isContinuousMode;
-              },
-              isContinuousMode: widget.viewModel.isContinuousMode,
-              viewModel: widget.viewModel,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+                      msg:
