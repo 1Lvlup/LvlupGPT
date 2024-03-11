@@ -1,24 +1,74 @@
+import 'package:flutter/material.dart';
+
+class TaskListTile extends StatelessWidget {
+  final Task task;
+  final VoidCallback onTap;
+  final VoidCallback onDelete;
+  final bool selected;
+
+  const TaskListTile({
+    Key? key,
+    required this.task,
+    required this.onTap,
+    required this.onDelete,
+    this.selected = false,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Checkbox(
+        value: selected,
+        onChanged: (_) {},
+      ),
+      title: Text(task.title),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: Icon(Icons.edit),
+            onPressed: onTap,
+          ),
+          IconButton(
+            icon: Icon(Icons.delete),
+            onPressed: onDelete,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
 import 'package:auto_gpt_flutter_client/models/test_suite.dart';
 import 'package:auto_gpt_flutter_client/viewmodels/chat_viewmodel.dart';
 import 'package:auto_gpt_flutter_client/viewmodels/task_viewmodel.dart';
-import 'package:auto_gpt_flutter_client/views/task/task_list_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-// TODO: Do we want a view model for every view?
 class TestSuiteDetailView extends StatefulWidget {
   final TaskViewModel viewModel;
   final TestSuite testSuite;
 
-  const TestSuiteDetailView(
-      {Key? key, required this.testSuite, required this.viewModel})
-      : super(key: key);
+  const TestSuiteDetailView({
+    Key? key,
+    required this.testSuite,
+    required this.viewModel,
+  }) : super(key: key);
 
   @override
   _TestSuiteDetailViewState createState() => _TestSuiteDetailViewState();
 }
 
 class _TestSuiteDetailViewState extends State<TestSuiteDetailView> {
+  late ChatViewModel _chatViewModel;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _chatViewModel = Provider.of<ChatViewModel>(context, listen: false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,34 +87,21 @@ class _TestSuiteDetailViewState extends State<TestSuiteDetailView> {
           // Task List
           Expanded(
             child: ListView.builder(
-              itemCount:
-                  widget.testSuite.tests.length, // Count of tasks passed in
+              itemCount: widget.testSuite.tests.length,
               itemBuilder: (context, index) {
                 final task = widget.testSuite.tests[index];
                 return TaskListTile(
                   task: task,
                   onTap: () {
-                    // Select the task in TaskViewModel
                     widget.viewModel.selectTask(task.id);
-
-                    // Update the current task ID in ChatViewModel
-                    // TODO: Do we want to have a reference to chat view model in this class?
-                    final chatViewModel =
-                        Provider.of<ChatViewModel>(context, listen: false);
-                    chatViewModel.setCurrentTaskId(task.id);
-
+                    _chatViewModel.setCurrentTaskId(task.id);
                     print('Task ${task.title} tapped');
                   },
                   onDelete: () {
-                    // Delete the task in TaskViewModel
                     widget.viewModel.deleteTask(task.id);
-                    // TODO: Do we want to have a reference to chat view model in this class?
-                    final chatViewModel =
-                        Provider.of<ChatViewModel>(context, listen: false);
-                    if (chatViewModel.currentTaskId == task.id) {
-                      chatViewModel.clearCurrentTaskAndChats();
+                    if (_chatViewModel.currentTaskId == task.id) {
+                      _chatViewModel.clearCurrentTaskAndChats();
                     }
-
                     print('Task ${task.title} delete button tapped');
                   },
                   selected: task.id == widget.viewModel.selectedTask?.id,
