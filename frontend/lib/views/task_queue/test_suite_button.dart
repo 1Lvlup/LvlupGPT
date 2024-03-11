@@ -20,71 +20,46 @@ class TestSuiteButton extends StatefulWidget {
 }
 
 class _TestSuiteButtonState extends State<TestSuiteButton> {
+  late String selectedOption;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedOption = widget.selectedOptionString;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
         // Dropdown button with test options
         Expanded(
-          // Added Expanded to make sure it takes the available space
-          child: PopupMenuButton<String>(
+          child: PopupMenuButton<TestOption>(
             enabled: !widget.isDisabled,
             onSelected: (value) {
               setState(() {
-                widget.selectedOptionString = value;
+                selectedOption = value.description;
+                widget.selectedOptionString = selectedOption;
               });
-              widget.onOptionSelected(widget.selectedOptionString);
+              widget.onOptionSelected(selectedOption);
             },
             itemBuilder: (BuildContext context) {
               return [
                 PopupMenuItem(
-                  value: TestOption.runSingleTest.description,
+                  value: TestOption.runSingleTest,
                   child: Text(TestOption.runSingleTest.description),
                 ),
                 PopupMenuItem(
-                  value: TestOption
-                      .runTestSuiteIncludingSelectedNodeAndAncestors
-                      .description,
-                  child: Text(TestOption
-                      .runTestSuiteIncludingSelectedNodeAndAncestors
-                      .description),
+                  value: TestOption.runTestSuiteIncludingSelectedNodeAndAncestors,
+                  child: Text(TestOption.runTestSuiteIncludingSelectedNodeAndAncestors.description),
                 ),
                 PopupMenuItem(
-                  value: TestOption.runAllTestsInCategory.description,
+                  value: TestOption.runAllTestsInCategory,
                   child: Text(TestOption.runAllTestsInCategory.description),
                 ),
               ];
             },
-            child: Container(
-              height: 50,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: widget.isDisabled ? Colors.grey : AppColors.primaryLight,
-                borderRadius: BorderRadius.circular(8.0),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Flexible(
-                    child: Text(
-                      widget.selectedOptionString,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12.50,
-                        fontFamily: 'Archivo',
-                        fontWeight: FontWeight.w400,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 2,
-                    ),
-                  ),
-                  const Icon(
-                    Icons.arrow_drop_down,
-                    color: Colors.white,
-                  )
-                ],
-              ),
-            ),
+            child: _buildDropdownButton(),
           ),
         ),
         // Play button
@@ -104,7 +79,7 @@ class _TestSuiteButtonState extends State<TestSuiteButton> {
             onPressed: widget.isDisabled
                 ? null
                 : () {
-                    widget.onPlayPressed(widget.selectedOptionString);
+                    widget.onPlayPressed(selectedOption);
                   },
             child: const Icon(
               Icons.play_arrow,
@@ -114,6 +89,39 @@ class _TestSuiteButtonState extends State<TestSuiteButton> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildDropdownButton() {
+    return Container(
+      height: 50,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: widget.isDisabled ? Colors.grey : AppColors.primaryLight,
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Flexible(
+            child: Text(
+              selectedOption,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12.50,
+                fontFamily: 'Archivo',
+                fontWeight: FontWeight.w400,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+            ),
+          ),
+          const Icon(
+            Icons.arrow_drop_down,
+            color: Colors.white,
+          )
+        ],
+      ),
     );
   }
 }
