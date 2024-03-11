@@ -1,5 +1,8 @@
+# This file defines a list of repositories that will be managed by this configuration.
 repositories:
+  # Each repository is defined by a dictionary that contains its path and maintainer.
   - path: .github/workflows
+    # The maintainer field specifies the GitHub handle of the person responsible for maintaining this repository.
     maintainer: @Significant-Gravitas/devops
 
   - path: autogpts/autogpt
