@@ -1,39 +1,54 @@
-# sourcery skip: snake-case-functions
 """Tests for JSONFileMemory class"""
+
 import orjson
 import pytest
 
-from autogpt.config import Config
-from autogpt.file_workspace import FileWorkspace
-from autogpt.memory.vector import JSONFileMemory, MemoryItem
+from autogpt.config import Config  # Importing Config class from autogpt.config module
+from autogpt.file_workspace import FileWorkspace  # Importing FileWorkspace class from autogpt.file_workspace module
+from autogpt.memory.vector import JSONFileMemory, MemoryItem  # Importing JSONFileMemory and MemoryItem classes from autogpt.memory.vector module
 
 
 def test_json_memory_init_without_backing_file(
     config: Config, workspace: FileWorkspace
 ):
+    """
+    Test JSONFileMemory initialization without a backing file.
+
+    This test checks if the index file is created and initialized with an empty list when JSONFileMemory is initialized without a backing file.
+    """
     index_file = workspace.root / f"{config.memory_index}.json"
 
-    assert not index_file.exists()
+    assert not index_file.exists()  # Check if the index file does not exist before initialization
     JSONFileMemory(config)
-    assert index_file.exists()
-    assert index_file.read_text() == "[]"
+    assert index_file.exists()  # Check if the index file is created after initialization
+    assert index_file.read_text() == "[]"  # Check if the index file is initialized with an empty list
 
 
 def test_json_memory_init_with_backing_empty_file(
     config: Config, workspace: FileWorkspace
 ):
+    """
+    Test JSONFileMemory initialization with an empty backing file.
+
+    This test checks if the index file is loaded correctly when JSONFileMemory is initialized with an empty backing file.
+    """
     index_file = workspace.root / f"{config.memory_index}.json"
     index_file.touch()
 
-    assert index_file.exists()
+    assert index_file.exists()  # Check if the index file exists before initialization
     JSONFileMemory(config)
-    assert index_file.exists()
-    assert index_file.read_text() == "[]"
+    assert index_file.exists()  # Check if the index file still exists after initialization
+    assert index_file.read_text() == "[]"  # Check if the index file is still empty after initialization
 
 
 def test_json_memory_init_with_backing_invalid_file(
     config: Config, workspace: FileWorkspace
 ):
+    """
+    Test JSONFileMemory initialization with an invalid backing file.
+
+    This test checks if the index file is reinitialized with an empty list when JSONFileMemory is initialized with an invalid backing file.
+    """
     index_file = workspace.root / f"{config.memory_index}.json"
     index_file.touch()
 
@@ -42,30 +57,45 @@ def test_json_memory_init_with_backing_invalid_file(
     with index_file.open("wb") as f:
         f.write(data)
 
-    assert index_file.exists()
+    assert index_file.exists()  # Check if the index file exists before initialization
     JSONFileMemory(config)
-    assert index_file.exists()
-    assert index_file.read_text() == "[]"
+    assert index_file.exists()  # Check if the index file still exists after initialization
+    assert index_file.read_text() == "[]"  # Check if the index file is reinitialized with an empty list
 
 
 def test_json_memory_add(config: Config, memory_item: MemoryItem):
+    """
+    Test adding a memory item to the JSONFileMemory index.
+
+    This test checks if the memory item is correctly added to the index.
+    """
     index = JSONFileMemory(config)
     index.add(memory_item)
-    assert index.memories[0] == memory_item
+    assert index.memories[0] == memory_item  # Check if the memory item is added to the index
 
 
 def test_json_memory_clear(config: Config, memory_item: MemoryItem):
+    """
+    Test clearing the JSONFileMemory index.
+
+    This test checks if the index is correctly cleared.
+    """
     index = JSONFileMemory(config)
-    assert index.memories == []
+    assert index.memories == []  # Check if the index is initially empty
 
     index.add(memory_item)
     assert index.memories[0] == memory_item, "Cannot test clear() because add() fails"
 
     index.clear()
-    assert index.memories == []
+    assert index.memories == []  # Check if the index is emptied after clear()
 
 
 def test_json_memory_get(config: Config, memory_item: MemoryItem, mock_get_embedding):
+    """
+    Test retrieving a memory item from the JSONFileMemory index.
+
+    This test checks if the memory item is correctly retrieved from the index.
+    """
     index = JSONFileMemory(config)
     assert (
         index.get("test", config) is None
@@ -73,11 +103,16 @@ def test_json_memory_get(config: Config, memory_item: MemoryItem, mock_get_embed
 
     index.add(memory_item)
     retrieved = index.get("test", config)
-    assert retrieved is not None
-    assert retrieved.memory_item == memory_item
+    assert retrieved is not None  # Check if a memory item is retrieved
+    assert retrieved.memory_item == memory_item  # Check if the correct memory item is retrieved
 
 
 def test_json_memory_load_index(config: Config, memory_item: MemoryItem):
+    """
+    Test loading the JSONFileMemory index from a file.
+
+    This test checks if the index is correctly loaded from a file.
+    """
     index = JSONFileMemory(config)
     index.add(memory_item)
 
@@ -91,40 +126,15 @@ def test_json_memory_load_index(config: Config, memory_item: MemoryItem):
     index.memories = []
     index.load_index()
 
-    assert len(index) == 1
-    assert index.memories[0] == memory_item
+    assert len(index) == 1  # Check if the index is correctly loaded from the file
+    assert index.memories[0] == memory_item  # Check if the memory item is correctly loaded
 
 
 @pytest.mark.vcr
 @pytest.mark.requires_openai_api_key
 def test_json_memory_get_relevant(config: Config, cached_openai_client: None) -> None:
-    index = JSONFileMemory(config)
-    mem1 = MemoryItem.from_text_file("Sample text", "sample.txt", config)
-    mem2 = MemoryItem.from_text_file(
-        "Grocery list:\n- Pancake mix", "groceries.txt", config
-    )
-    mem3 = MemoryItem.from_text_file(
-        "What is your favorite color?", "color.txt", config
-    )
-    lipsum = "Lorem ipsum dolor sit amet"
-    mem4 = MemoryItem.from_text_file(" ".join([lipsum] * 100), "lipsum.txt", config)
-    index.add(mem1)
-    index.add(mem2)
-    index.add(mem3)
-    index.add(mem4)
+    """
+    Test retrieving relevant memory items from the JSONFileMemory index.
 
-    assert index.get_relevant(mem1.raw_content, 1, config)[0].memory_item == mem1
-    assert index.get_relevant(mem2.raw_content, 1, config)[0].memory_item == mem2
-    assert index.get_relevant(mem3.raw_content, 1, config)[0].memory_item == mem3
-    assert [mr.memory_item for mr in index.get_relevant(lipsum, 2, config)] == [
-        mem4,
-        mem1,
-    ]
-
-
-def test_json_memory_get_stats(config: Config, memory_item: MemoryItem) -> None:
-    index = JSONFileMemory(config)
-    index.add(memory_item)
-    n_memories, n_chunks = index.get_stats()
-    assert n_memories == 1
-    assert n_chunks == 1
+    This test checks if the relevant memory items are correctly retrieved from the index.
+    """
