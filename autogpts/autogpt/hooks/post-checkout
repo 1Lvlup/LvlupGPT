@@ -1,2 +1,7 @@
-#!/bin/sh
-git submodule update --init --remote --recursive
+# This script updates the git submodules to the latest version of their respective repositories.
+# It performs the following actions:
+# 1. Initializes any submodules that have not yet been initialized.
+# 2. Updates the remote tracking branches for all submodules.
+# 3. Fetches any new changes from the remote repositories.
+# 4. Pulls those changes into the local submodule repositories.
+# This is useful for ensuring that all submodules are up-to-date with the latest changes.
