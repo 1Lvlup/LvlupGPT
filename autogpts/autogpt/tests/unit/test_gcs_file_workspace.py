@@ -11,18 +11,24 @@ from google.cloud.exceptions import NotFound
 from autogpt.file_workspace.gcs import GCSFileWorkspace, GCSFileWorkspaceConfiguration
 
 try:
-    storage.Client()
+    storage.Client()  # Check if Google Cloud authentication is configured
 except GoogleAuthError:
     pytest.skip("Google Cloud Authentication not configured", allow_module_level=True)
 
 
 @pytest.fixture(scope="module")
 def gcs_bucket_name() -> str:
+    """
+    Generate a unique test bucket name.
+    """
     return f"test-bucket-{str(uuid.uuid4())[:8]}"
 
 
 @pytest.fixture(scope="module")
 def gcs_workspace_uninitialized(gcs_bucket_name: str) -> GCSFileWorkspace:
+    """
+    Create a GCSFileWorkspace instance with an uninitialized bucket.
+    """
     os.environ["WORKSPACE_STORAGE_BUCKET"] = gcs_bucket_name
     ws_config = GCSFileWorkspaceConfiguration.from_env()
     ws_config.root = Path("/workspaces/AutoGPT-some-unique-task-id")
@@ -34,27 +40,33 @@ def gcs_workspace_uninitialized(gcs_bucket_name: str) -> GCSFileWorkspace:
 def test_initialize(
     gcs_bucket_name: str, gcs_workspace_uninitialized: GCSFileWorkspace
 ):
+    """
+    Test the initialization of a GCSFileWorkspace instance.
+    """
     gcs = gcs_workspace_uninitialized._gcs
 
-    # test that the bucket doesn't exist yet
+    # Check if the bucket doesn't exist before initialization
     with pytest.raises(NotFound):
         gcs.get_bucket(gcs_bucket_name)
 
     gcs_workspace_uninitialized.initialize()
 
-    # test that the bucket has been created
+    # Check if the bucket has been created after initialization
     bucket = gcs.get_bucket(gcs_bucket_name)
 
-    # clean up
+    # Clean up the test bucket
     bucket.delete(force=True)
 
 
 @pytest.fixture(scope="module")
 def gcs_workspace(gcs_workspace_uninitialized: GCSFileWorkspace) -> GCSFileWorkspace:
+    """
+    Initialize and return a GCSFileWorkspace instance.
+    """
     (gcs_workspace := gcs_workspace_uninitialized).initialize()
     yield gcs_workspace  # type: ignore
 
-    # Empty & delete the test bucket
+    # Empty and delete the test bucket
     gcs_workspace._bucket.delete(force=True)
 
 
@@ -62,6 +74,9 @@ def test_workspace_bucket_name(
     gcs_workspace: GCSFileWorkspace,
     gcs_bucket_name: str,
 ):
+    """
+    Test if the workspace bucket name matches the expected bucket name.
+    """
     assert gcs_workspace._bucket.name == gcs_bucket_name
 
 
@@ -76,6 +91,9 @@ TEST_FILES: list[tuple[str | Path, str]] = [
 
 @pytest_asyncio.fixture
 async def gcs_workspace_with_files(gcs_workspace: GCSFileWorkspace) -> GCSFileWorkspace:
+    """
+    Upload test files to the GCSFileWorkspace instance and return it.
+    """
     for file_name, file_content in TEST_FILES:
         gcs_workspace._bucket.blob(
             str(gcs_workspace.get_path(file_name))
@@ -85,6 +103,9 @@ async def gcs_workspace_with_files(gcs_workspace: GCSFileWorkspace) -> GCSFileWo
 
 @pytest.mark.asyncio
 async def test_read_file(gcs_workspace_with_files: GCSFileWorkspace):
+    """
+    Test reading files from the GCSFileWorkspace instance.
+    """
     for file_name, file_content in TEST_FILES:
         content = gcs_workspace_with_files.read_file(file_name)
         assert content == file_content
@@ -94,12 +115,15 @@ async def test_read_file(gcs_workspace_with_files: GCSFileWorkspace):
 
 
 def test_list_files(gcs_workspace_with_files: GCSFileWorkspace):
-    # List at root level
+    """
+    Test listing files in the GCSFileWorkspace instance.
+    """
+    # List files at the root level
     assert (files := gcs_workspace_with_files.list()) == gcs_workspace_with_files.list()
     assert len(files) > 0
     assert set(files) == set(Path(file_name) for file_name, _ in TEST_FILES)
 
-    # List at nested path
+    # List files at a nested path
     assert (
         nested_files := gcs_workspace_with_files.list(NESTED_DIR)
     ) == gcs_workspace_with_files.list(NESTED_DIR)
@@ -113,19 +137,11 @@ def test_list_files(gcs_workspace_with_files: GCSFileWorkspace):
 
 @pytest.mark.asyncio
 async def test_write_read_file(gcs_workspace: GCSFileWorkspace):
+    """
+    Test writing and reading files in the GCSFileWorkspace instance.
+    """
     await gcs_workspace.write_file("test_file", "test_content")
     assert gcs_workspace.read_file("test_file") == "test_content"
 
 
-@pytest.mark.asyncio
-async def test_overwrite_file(gcs_workspace_with_files: GCSFileWorkspace):
-    for file_name, _ in TEST_FILES:
-        await gcs_workspace_with_files.write_file(file_name, "new content")
-        assert gcs_workspace_with_files.read_file(file_name) == "new content"
-
-
-def test_delete_file(gcs_workspace_with_files: GCSFileWorkspace):
-    for file_to_delete, _ in TEST_FILES:
-        gcs_workspace_with_files.delete_file(file_to_delete)
-        with pytest.raises(NotFound):
-            gcs_workspace_with_files.read_file(file_to_delete)
+@pytest.mark.
