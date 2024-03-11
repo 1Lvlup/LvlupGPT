@@ -1,16 +1,18 @@
-window.MathJax = {
+document.addEventListener('DOMContentLoaded', () => {
+  window.MathJax = {
     tex: {
-        inlineMath: [["\\(", "\\)"]],
-        displayMath: [["\\[", "\\]"]],
-        processEscapes: true,
-        processEnvironments: true
+      inlineMath: [['\\(', '\\)']],
+      displayMath: [['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
     },
     options: {
-        ignoreHtmlClass: ".*|",
-        processHtmlClass: "arithmatex"
+      ignoreHtmlClass: '.*|',
+      processHtmlClass: 'arithmatex'
     }
-};
+  };
 
-document$.subscribe(() => {
-    MathJax.typesetPromise()
-})
+  MathJax.typesetPromise().catch(error => {
+    console.error('MathJax failed to typeset: ', error);
+  });
+});
