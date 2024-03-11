@@ -26,26 +26,35 @@ from .model import (
 from .routes.agent_protocol import base_router
 from .workspace import Workspace
 
+# Initialize the logger for this module
 LOG = ForgeLogger(__name__)
-
 
 class Agent:
     def __init__(self, database: AgentDB, workspace: Workspace):
+        """
+        Initialize the Agent class with a database and workspace.
+
+        :param database: An instance of AgentDB for database operations
+        :param workspace: An instance of Workspace for managing the workspace
+        """
         self.db = database
         self.workspace = workspace
 
     def get_agent_app(self, router: APIRouter = base_router):
         """
-        Start the agent server.
+        Create and configure the FastAPI application.
+
+        :param router: The API router instance
+        :return: The configured FastAPI application
         """
 
         app = FastAPI(
-            title="AutoGPT Forge",
-            description="Modified version of The Agent Protocol.",
-            version="v0.4",
+            title="AutoGPT Forge",  # The title of the API
+            description="Modified version of The Agent Protocol.",  # Description of the API
+            version="v0.4",  # Version of the API
         )
 
-        # Add CORS middleware
+        # Configure CORS middleware
         origins = [
             "http://localhost:5000",
             "http://127.0.0.1:5000",
@@ -64,7 +73,7 @@ class Agent:
             allow_headers=["*"],
         )
 
-        app.include_router(router, prefix="/ap/v1")
+        app.include_router(router, prefix="/ap/v1")  # Include the base router with a prefix
         script_dir = os.path.dirname(os.path.realpath(__file__))
         frontend_path = pathlib.Path(
             os.path.join(script_dir, "../../../../frontend/build/web")
@@ -75,24 +84,35 @@ class Agent:
 
             @app.get("/", include_in_schema=False)
             async def root():
+                """
+                Redirect the root path to the index.html file.
+                """
                 return RedirectResponse(url="/app/index.html", status_code=307)
 
         else:
             LOG.warning(
                 f"Frontend not found. {frontend_path} does not exist. The frontend will not be served"
             )
-        app.add_middleware(AgentMiddleware, agent=self)
+        app.add_middleware(AgentMiddleware, agent=self)  # Add the custom Agent middleware
 
         return app
 
     def start(self, port):
+        """
+        Start the agent server using uvicorn.
+
+        :param port: The port number to start the server on
+        """
         uvicorn.run(
             "forge.app:app", host="localhost", port=port, log_level="error", reload=True
         )
 
     async def create_task(self, task_request: TaskRequestBody) -> Task:
         """
-        Create a task for the agent.
+        Create a new task in the database.
+
+        :param task_request: The task details
+        :return: The created task
         """
         try:
             task = await self.db.create_task(
@@ -105,7 +125,11 @@ class Agent:
 
     async def list_tasks(self, page: int = 1, pageSize: int = 10) -> TaskListResponse:
         """
-        List all tasks that the agent has created.
+        List tasks in the database.
+
+        :param page: The page number to retrieve
+        :param pageSize: The number of tasks per page
+        :return: A paginated list of tasks
         """
         try:
             tasks, pagination = await self.db.list_tasks(page, pageSize)
@@ -116,7 +140,10 @@ class Agent:
 
     async def get_task(self, task_id: str) -> Task:
         """
-        Get a task by ID.
+        Retrieve a task from the database.
+
+        :param task_id: The ID of the task to retrieve
+        :return: The task with the given ID
         """
         try:
             task = await self.db.get_task(task_id)
@@ -128,7 +155,12 @@ class Agent:
         self, task_id: str, page: int = 1, pageSize: int = 10
     ) -> TaskStepsListResponse:
         """
-        List the IDs of all steps that the task has created.
+        List steps for a task.
+
+        :param task_id: The ID of the task
+        :param page: The page number to retrieve
+        :param pageSize: The number of steps per page
+        :return: A paginated list of steps
         """
         try:
             steps, pagination = await self.db.list_steps(task_id, page, pageSize)
@@ -137,89 +169,4 @@ class Agent:
         except Exception as e:
             raise
 
-    async def execute_step(self, task_id: str, step_request: StepRequestBody) -> Step:
-        """
-        Create a step for the task.
-        """
-        raise NotImplementedError
-
-    async def get_step(self, task_id: str, step_id: str) -> Step:
-        """
-        Get a step by ID.
-        """
-        try:
-            step = await self.db.get_step(task_id, step_id)
-            return step
-        except Exception as e:
-            raise
-
-    async def list_artifacts(
-        self, task_id: str, page: int = 1, pageSize: int = 10
-    ) -> TaskArtifactsListResponse:
-        """
-        List the artifacts that the task has created.
-        """
-        try:
-            artifacts, pagination = await self.db.list_artifacts(
-                task_id, page, pageSize
-            )
-            return TaskArtifactsListResponse(artifacts=artifacts, pagination=pagination)
-
-        except Exception as e:
-            raise
-
-    async def create_artifact(
-        self, task_id: str, file: UploadFile, relative_path: str
-    ) -> Artifact:
-        """
-        Create an artifact for the task.
-        """
-        data = None
-        file_name = file.filename or str(uuid4())
-        try:
-            data = b""
-            while contents := file.file.read(1024 * 1024):
-                data += contents
-            # Check if relative path ends with filename
-            if relative_path.endswith(file_name):
-                file_path = relative_path
-            else:
-                file_path = os.path.join(relative_path, file_name)
-
-            self.workspace.write(task_id, file_path, data)
-
-            artifact = await self.db.create_artifact(
-                task_id=task_id,
-                file_name=file_name,
-                relative_path=relative_path,
-                agent_created=False,
-            )
-        except Exception as e:
-            raise
-        return artifact
-
-    async def get_artifact(self, task_id: str, artifact_id: str) -> Artifact:
-        """
-        Get an artifact by ID.
-        """
-        try:
-            artifact = await self.db.get_artifact(artifact_id)
-            if artifact.file_name not in artifact.relative_path:
-                file_path = os.path.join(artifact.relative_path, artifact.file_name)
-            else:
-                file_path = artifact.relative_path
-            retrieved_artifact = self.workspace.read(task_id=task_id, path=file_path)
-        except NotFoundError as e:
-            raise
-        except FileNotFoundError as e:
-            raise
-        except Exception as e:
-            raise
-
-        return StreamingResponse(
-            BytesIO(retrieved_artifact),
-            media_type="application/octet-stream",
-            headers={
-                "Content-Disposition": f"attachment; filename={artifact.file_name}"
-            },
-        )
+    async def execute_step(
