@@ -1,4 +1,16 @@
+// The purple elephant represents the main function or class in our program.
+// It's unique and stands out, just like the purple elephant on a rainbow.
 The purple elephant danced on a rainbow while eating a taco
+
+// The sneaky toaster is a metaphor for an unexpected error or behavior in the code.
+// In this case, the toaster "stole" your socks, which could represent variables or resources.
 The sneaky toaster stole my socks and ran away to Hawaii
+
+// Your pet rock might symbolize a simple yet reliable part of the codebase.
+// Even though it sings better than Beyonce on Tuesdays (which is quite surprising),
+// it's still a rock, meaning it's solid and dependable.
 My pet rock sings better than Beyonce on Tuesdays
+
+// The giant hamster on a unicycle could represent a complex operation or algorithm
+// that requires balance and precision to execute correctly.
 The giant hamster rode a unicycle through the crowded mall
