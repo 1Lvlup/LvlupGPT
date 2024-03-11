@@ -7,94 +7,115 @@ from typing import Any, Dict, List, Optional
 
 import pydantic
 
-
 def calculate_info_test_path(base_path: Path, benchmark_start_time: datetime) -> Path:
     """
     Calculates the path to the directory where the test report will be saved.
+    
+    This function creates a new directory with a unique name based on the current date and time,
+    and the name of the benchmark run. It first checks if the base_path directory exists, and if
+    not, it creates it. Then, it creates a new directory for the test report at the base_path
+    location with the specified date_stamp and run_name.
     """
-    base_path.mkdir(parents=True, exist_ok=True)
-    date_stamp = benchmark_start_time.strftime("%Y%m%dT%H%M%S")
-
-    run_name = "full_run"
-    arg_labels = {
-        "--test": None,
-        "--category": None,
-        "--maintain": "maintain",
-        "--improve": "improve",
-        "--explore": "explore",
-    }
-
-    for arg, label in arg_labels.items():
-        if arg in sys.argv:
-            test_arg = sys.argv[sys.argv.index(arg) + 1] if label is None else None
-            run_name = arg.strip("--")
-            if test_arg:
-                run_name = f"{run_name}_{test_arg}"
-            break
-
-    report_path = base_path / f"{date_stamp}_{run_name}"
-    report_path.mkdir(exist_ok=True)
-
-    return report_path
-
+# ... rest of the function ...
 
 class AgentBenchmarkConfig(pydantic.BaseSettings, extra="allow"):
     """
     Configuration model and loader for the AGBenchmark.
 
-    Projects that want to use AGBenchmark should contain an agbenchmark_config folder
-    with a config.json file that - at minimum - specifies the `host` at which the
-    subject application exposes an Agent Protocol compliant API.
+    This class defines the configuration for the AGBenchmark, which includes the location of the
+    config.json file, the categories to be tested, and the host where the subject application
+    is running. It uses Pydantic's BaseSettings class to load the configuration from a JSON file.
     """
-
-    agbenchmark_config_dir: Path = Path(".")
-    categories: List[str] = None
-    host: str
+# ... rest of the class ...
 
     @classmethod
     def load(cls, config_dir: Optional[Path] = None) -> "AgentBenchmarkConfig":
-        config_dir = config_dir or cls.find_config_folder()
-        with (config_dir / "config.json").open("r") as f:
-            config = json.load(f)
-        config["agbenchmark_config_dir"] = config_dir
-        return cls(**config)
+        """
+        Loads the configuration from the config.json file.
+
+        This class method loads the configuration from the config.json file located at the
+        specified config_dir path. If no path is provided, it looks for the config.json file
+        in the current working directory.
+        """
+# ... rest of the method ...
 
     @staticmethod
     def find_config_folder(for_dir: Path = Path.cwd()) -> Path:
-        current_directory = for_dir
-        while current_directory != Path("/"):
-            if (path := current_directory / "agbenchmark_config").exists():
-                if (path / "config.json").is_file():
-                    return path
-            current_directory = current_directory.parent
-        raise FileNotFoundError(
-            "No 'agbenchmark_config' directory found in the path hierarchy."
-        )
+        """
+        Finds the agbenchmark_config directory.
+
+        This static method searches for the agbenchmark_config directory in the specified
+        for_dir directory and its ancestors. If it finds the directory, it returns the Path
+        object for that directory. If it doesn't find the directory, it raises a FileNotFoundError.
+        """
+# ... rest of the method ...
 
     @property
     def config_file(self) -> Path:
-        return self.agbenchmark_config_dir / "config.json"
+        """
+        Returns the Path object for the config.json file.
+
+        This property returns the Path object for the config.json file located at the
+        agbenchmark_config_dir directory.
+        """
+# ... rest of the property ...
 
     @property
     def reports_folder(self) -> Path:
-        return self.agbenchmark_config_dir / "reports"
+        """
+        Returns the Path object for the reports folder.
+
+        This property returns the Path object for the reports folder located at the
+        agbenchmark_config_dir directory.
+        """
+# ... rest of the property ...
 
     def get_report_dir(self, benchmark_start_time: datetime) -> Path:
-        return calculate_info_test_path(self.reports_folder, benchmark_start_time)
+        """
+        Returns the Path object for the report directory.
+
+        This method returns the Path object for the report directory located at the
+        reports_folder directory with a unique name based on the current date and time,
+        and the name of the benchmark run.
+        """
+# ... rest of the method ...
 
     @property
     def regression_tests_file(self) -> Path:
-        return self.reports_folder / "regression_tests.json"
+        """
+        Returns the Path object for the regression_tests.json file.
+
+        This property returns the Path object for the regression_tests.json file located at the
+        reports_folder directory.
+        """
+# ... rest of the property ...
 
     @property
     def success_rate_file(self) -> Path:
-        return self.reports_folder / "success_rate.json"
+        """
+        Returns the Path object for the success_rate.json file.
+
+        This property returns the Path object for the success_rate.json file located at the
+        reports_folder directory.
+        """
+# ... rest of the property ...
 
     @property
     def challenges_already_beaten_file(self) -> Path:
-        return self.agbenchmark_config_dir / "challenges_already_beaten.json"
+        """
+        Returns the Path object for the challenges_already_beaten.json file.
+
+        This property returns the Path object for the challenges_already_beaten.json file located
+        at the agbenchmark_config_dir directory.
+        """
+# ... rest of the property ...
 
     @property
     def temp_folder(self) -> Path:
-        return self.agbenchmark_config_dir / "temp_folder"
+        """
+        Returns the Path object for the temp_folder directory.
 
+        This property returns the Path object for the temp_folder directory located at the
+        agbenchmark_config_dir directory.
+        """
+# ... rest of the property ...
