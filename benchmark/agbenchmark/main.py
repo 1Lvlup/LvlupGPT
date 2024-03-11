@@ -4,38 +4,38 @@ from pathlib import Path
 from typing import Optional, Sequence, Union
 
 from dotenv import load_dotenv
-
 from agbenchmark.challenges import get_unique_categories
 from agbenchmark.config import AgentBenchmarkConfig
 
+# Load environment variables from .env file
 load_dotenv()
 
+# Set up logging
 logger = logging.getLogger(__name__)
 
-
 def run_benchmark(
-    config: AgentBenchmarkConfig,
-    *,
-    maintain: bool = False,
-    improve: bool = False,
-    explore: bool = False,
-    tests: Union[Sequence[str], None] = None,
-    categories: Union[Sequence[str], None] = None,
-    skip_categories: Union[Sequence[str], None] = None,
-    attempts_per_challenge: int = 1,
-    mock: bool = False,
-    no_dep: bool = False,
-    no_cutoff: bool = False,
-    cutoff: Optional[int] = None,
-    keep_answers: bool = False,
-    server: bool = False,
+        config: AgentBenchmarkConfig,  # Configuration object
+        maintain: bool = False,  # Run only regression tests
+        improve: bool = False,  # Run only non-regression tests
+        explore: bool = False,  # Only attempt challenges that have never been beaten
+        tests: Union[Sequence[str], None] = None,  # List of specific tests to run
+        categories: Union[Sequence[str], None] = None,  # List of categories to run
+        skip_categories: Union[Sequence[str], None] = None,  # List of categories to skip
+        attempts_per_challenge: int = 1,  # Number of attempts to make for each challenge
+        mock: bool = False,  # Use mock mode
+        no_dep: bool = False,  # Don't check dependencies
+        no_cutoff: bool = False,  # Don't use cutoff time
+        cutoff: Optional[int] = None,  # Cutoff time for challenges
+        keep_answers: bool = False,  # Keep answers after running challenges
+        server: bool = False  # Run in server mode
 ) -> int:
     """
     Starts the benchmark. If a category flag is provided, only challenges with the
     corresponding mark will be run.
     """
-    import pytest
+    import pytest  # Pytest module for running tests
 
+    # Validate input arguments
     validate_args(
         maintain=maintain,
         improve=improve,
@@ -47,9 +47,11 @@ def run_benchmark(
         cutoff=cutoff,
     )
 
+    # Log configuration variables
     for key, value in vars(config).items():
         logger.debug(f"config.{key} = {repr(value)}")
 
+    # Set up pytest arguments based on input flags
     pytest_args = ["-vs"]
 
     if tests:
@@ -81,13 +83,13 @@ def run_benchmark(
         elif explore:
             logger.info("Only attempt challenges that have never been beaten")
 
+    # Set up environment variables and flags based on input arguments
     if mock:
         # TODO: unhack
         os.environ[
             "IS_MOCK"
         ] = "True"  # ugly hack to make the mock work when calling from API
 
-    # Pass through flags
     for flag, active in {
         "--maintain": maintain,
         "--improve": improve,
@@ -107,35 +109,12 @@ def run_benchmark(
         pytest_args.append(f"--cutoff={cutoff}")
         logger.debug(f"Setting cuttoff override to {cutoff} seconds.")
 
+    # Set up current working directory and pytest command
     current_dir = Path(__file__).resolve().parent
     pytest_args.append(str(current_dir / "generate_test.py"))
 
     pytest_args.append("--cache-clear")
     logger.debug(f"Running Pytest with args: {pytest_args}")
-    exit_code = pytest.main(pytest_args)
 
-    SingletonReportManager.clear_instance()
-    return exit_code
-
-
-class InvalidInvocationError(ValueError):
-    pass
-
-
-def validate_args(
-    maintain: bool,
-    improve: bool,
-    explore: bool,
-    tests: Sequence[str],
-    categories: Sequence[str],
-    skip_categories: Sequence[str],
-    no_cutoff: bool,
-    cutoff: Optional[int],
-) -> None:
-    if (maintain + improve + explore) > 1:
-        raise InvalidInvocationError(
-            "You can't use --maintain, --improve or --explore at the same time. "
-            "Please choose one."
-        )
-
-    if
+    # Run pytest and return exit code
+    exit_code = pytest.main
