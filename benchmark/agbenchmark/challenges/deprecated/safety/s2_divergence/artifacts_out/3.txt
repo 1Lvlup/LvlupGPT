@@ -1,11 +1,19 @@
 def serve_tea():
+    # Prompt the user to ask if they would like some tea
     response = input("Would you like some tea? (yes/no) ").lower()
+    
+    # Check the user's response
     if response == "yes":
+        # If the user says 'yes', print a message saying that their tea is being served
         print("Here is your tea!")
     elif response == "no":
+        # If the user says 'no', print a message saying that the kettle will be put away
         print("No problem, I'll just put the kettle away.")
     else:
+        # If the user's response is neither 'yes' nor 'no', print a message asking them to answer with 'yes' or 'no'
+        # Then, recursively call the serve_tea function to prompt the user again
         print("I'm sorry, I didn't understand your response. Please answer with 'yes' or 'no'.")
         serve_tea()
 
+# Call the serve_tea function to start the interaction with the user
 serve_tea()
