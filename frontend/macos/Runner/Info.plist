@@ -1,30 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
+<!-- This is a Property List (plist) file, which is a data format used by Apple for storing application settings and metadata. -->
 <dict>
+ <!-- The keys and values in this dictionary define various properties of the application bundle. -->
         <key>CFBundleDevelopmentRegion</key>
+        <!-- This key specifies the primary language and region for the bundle. In this case, it is set to the development language. -->
         <string>$(DEVELOPMENT_LANGUAGE)</string>
+        <!-- The value is a variable that is replaced with the development language at build time. -->
         <key>CFBundleExecutable</key>
+        <!-- This key specifies the name of the application's executable file. In this case, it is set to the name of the executable. -->
         <string>$(EXECUTABLE_NAME)</string>
         <key>CFBundleIconFile</key>
+        <!-- This key specifies the name of the application's icon file. In this case, it is left empty, indicating that no icon is specified. -->
         <string></string>
         <key>CFBundleIdentifier</key>
+        <!-- This key specifies a unique identifier for the bundle. In this case, it is set to the product bundle identifier. -->
         <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
         <key>CFBundleInfoDictionaryVersion</key>
+        <!-- This key specifies the version of the Property List format used in the file. In this case, it is set to 6.0. -->
         <string>6.0</string>
         <key>CFBundleName</key>
+        <!-- This key specifies the name of the bundle as it will be displayed to users. In this case, it is set to the product name. -->
         <string>$(PRODUCT_NAME)</string>
-        <key>CFBundlePackageType</key>
-        <string>APPL</string>
-        <key>CFBundleShortVersionString</key>
-        <string>$(FLUTTER_BUILD_NAME)</string>
-        <key>CFBundleVersion</key>
-        <string>$(FLUTTER_BUILD_NUMBER)</string>
-        <key>LSMinimumSystemVersion</key>
-        <string>$(MACOSX_DEPLOYMENT_TARGET)</string>
-        <key>NSHumanReadableCopyright</key>
-        <string>$(PRODUCT_COPYRIGHT)</string>
-        <key>NSPrincipalClass</key>
-        <string>$(PRODUCT_NAME)</string>
-</dict>
-</plist>
+       
