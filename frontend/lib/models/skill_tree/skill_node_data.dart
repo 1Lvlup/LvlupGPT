@@ -7,9 +7,9 @@ class SkillNodeData {
   final String task;
   final List<String> dependencies;
   final int cutoff;
-  final Ground ground;
-  final Info info;
-  final String evalId;
+  final Ground? ground;
+  final Info? info;
+  final String? evalId;
 
   SkillNodeData({
     required this.name,
@@ -17,9 +17,9 @@ class SkillNodeData {
     required this.task,
     required this.dependencies,
     required this.cutoff,
-    required this.ground,
-    required this.info,
-    required this.evalId,
+    this.ground,
+    this.info,
+    this.evalId,
   });
 
   factory SkillNodeData.fromJson(Map<String, dynamic> json) {
@@ -29,8 +29,8 @@ class SkillNodeData {
       task: json['task'] ?? "",
       dependencies: List<String>.from(json['dependencies'] ?? []),
       cutoff: json['cutoff'] ?? 0,
-      ground: Ground.fromJson(json['ground'] ?? {}),
-      info: Info.fromJson(json['info'] ?? {}),
+      ground: json['ground'] != null ? Ground.fromJson(json['ground']) : null,
+      info: json['info'] != null ? Info.fromJson(json['info']) : null,
       evalId: json['eval_id'] ?? "",
     );
   }
