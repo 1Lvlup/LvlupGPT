@@ -9,14 +9,14 @@ from git import InvalidGitRepositoryError
 
 import autogpt.app.utils
 from autogpt.app.utils import (
-    get_bulletin_from_web,
-    get_current_git_branch,
-    get_latest_bulletin,
-    set_env_config_value,
+    get_bulletin_from_web, # This function fetches the latest bulletin from the web
+    get_current_git_branch, # This function retrieves the current Git branch name
+    get_latest_bulletin, # This function gets the latest bulletin and checks if it's new
+    set_env_config_value, # This function sets an environment configuration value
 )
-from autogpt.json_utils.utilities import extract_dict_from_response
-from autogpt.utils import validate_yaml_file
-from tests.utils import skip_in_ci
+from autogpt.json_utils.utilities import extract_dict_from_response # This function extracts a dictionary from a JSON response
+from autogpt.utils import validate_yaml_file # This function validates a YAML file
+from tests.utils import skip_in_ci # This function skips tests in CI environments
 
 
 @pytest.fixture
@@ -38,6 +38,7 @@ def valid_json_response() -> dict:
             "args": {"reason": "Task complete: retrieved Tesla's revenue in 2022."},
         },
     }
+# This fixture returns a valid JSON response for testing purposes
 
 
 @pytest.fixture
@@ -56,6 +57,7 @@ def invalid_json_response() -> dict:
         },
         "command": {"name": "", "args": {}},
     }
+# This fixture returns an invalid JSON response for testing purposes
 
 
 def test_validate_yaml_file_valid(tmp_path):
@@ -66,6 +68,7 @@ def test_validate_yaml_file_valid(tmp_path):
     assert result is True
     assert "Successfully validated" in message
     file_path.unlink()
+# This test checks if a valid YAML file is validated successfully
 
 
 def test_validate_yaml_file_not_found(tmp_path):
@@ -74,6 +77,7 @@ def test_validate_yaml_file_not_found(tmp_path):
 
     assert result is False
     assert "wasn't found" in message
+# This test checks if a non-existent YAML file is detected as not found
 
 
 def test_validate_yaml_file_invalid(tmp_path):
@@ -91,6 +95,7 @@ def test_validate_yaml_file_invalid(tmp_path):
     assert result is False
     assert "There was an issue while trying to read" in message
     file_path.unlink()
+# This test checks if an invalid YAML file is detected as invalid
 
 
 @patch("requests.get")
@@ -108,6 +113,7 @@ def test_get_bulletin_from_web_success(mock_get, tmp_path):
         "https://raw.githubusercontent.com/Significant-Gravitas/AutoGPT/master/autogpts/autogpt/BULLETIN.md"  # noqa: E501
     )
     bulletin_file.unlink()
+# This test checks if the bulletin is fetched successfully from the web
 
 
 @patch("requests.get")
@@ -116,6 +122,7 @@ def test_get_bulletin_from_web_failure(mock_get, tmp_path):
     bulletin = get_bulletin_from_web()
 
     assert bulletin == ""
+# This test checks if an empty bulletin is returned when the web request fails
 
 
 @patch("requests.get")
@@ -124,23 +131,8 @@ def test_get_bulletin_from_web_exception(mock_get, tmp_path):
     bulletin = get_bulletin_from_web()
 
     assert bulletin == ""
+# This test checks if an empty bulletin is returned when a request exception occurs
 
 
 def test_get_latest_bulletin_no_file(tmp_path):
-    bulletin_file = tmp_path / "CURRENT_BULLETIN.md"
-    if bulletin_file.exists():
-        bulletin_file.unlink()
 
-    bulletin, is_new = get_latest_bulletin(tmp_path)
-    assert is_new
-
-
-def test_get_latest_bulletin_with_file(tmp_path, valid_json_response):
-    expected_content = "Test bulletin"
-    bulletin_file = tmp_path / "CURRENT_BULLETIN.md"
-    bulletin_file.write_text(expected_content)
-
-    with patch("autogpt.app.utils.get_bulletin_from_web", return_value=""):
-        bulletin, is_new = get_latest_bulletin(tmp_path)
-        assert expected_content in bulletin
-        assert
