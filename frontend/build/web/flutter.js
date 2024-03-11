@@ -2,18 +2,23 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// Initialize the Flutter loader with a null value
 _flutter.loader = null;
 
+// Self-invoking anonymous function with strict mode enabled
 (function () {
   "use strict";
 
+  // Get the base URI of the document
   const baseUri = ensureTrailingSlash(getBaseURI());
 
+  // Function to get the base URI of the document
   function getBaseURI() {
     const base = document.querySelector("base");
     return base ? base.getAttribute("href") || "" : "";
   }
 
+  // Function to ensure a trailing slash in the URI
   function ensureTrailingSlash(uri) {
     if (uri === "") {
       return uri;
@@ -22,47 +27,22 @@ _flutter.loader = null;
   }
 
   /**
-   * @param {Promise<any>} promise
-   * @param {number} duration
-   * @param {string} debugName
-   * @returns {Promise<any>}
-   */
-  async function timeout(promise, duration, debugName) {
-    if (duration < 0) {
-      return promise;
-    }
-    let timeoutId;
-    const _clock = new Promise((_, reject) => {
-      timeoutId = setTimeout(() => {
-        reject(
-          new Error(
-            `${debugName} took more than ${duration}ms to resolve. Moving on.`,
-            timeout
-          )
-        );
-      }, duration);
-    });
-
-    return Promise.race([promise, _clock]).finally(() => {
-      clearTimeout(timeoutId);
-    });
-  }
-
-  /**
    * @typedef {{
    *   createScriptURL: (url: string) => string,
    * }}
    */
-  let TrustedTypesPolicy;
+  let TrustedTypesPolicy; // Type definition for TrustedTypesPolicy
 
   /**
    * @param {[RegExp]} validPatterns
    * @param {string} policyName
    */
   class FlutterTrustedTypesPolicy {
+    // Class to create a Trusted Types policy
     constructor(validPatterns, policyName = "flutter-js") {
       const patterns = validPatterns || [/\\.js$/];
       if (window.trustedTypes) {
+        // Create a Trusted Types policy if the browser supports it
         this.policy = trustedTypes.createPolicy(policyName, {
           createScriptURL: (url) => {
             const parsed = new URL(url, window.location);
@@ -85,12 +65,12 @@ _flutter.loader = null;
    * @see: https://developers.google.com/web/fundamentals/primers/service-workers
    */
   class FlutterServiceWorkerLoader {
-    /**
-     * @type {TrustedTypesPolicy | undefined}
-     */
-    #trustedTypesPolicy;
+    // Class to load the Flutter Service Worker
+
+    #trustedTypesPolicy; // Instance variable to store the TrustedTypesPolicy
 
     setTrustedTypesPolicy(policy) {
+      // Setter for the TrustedTypesPolicy
       this.#trustedTypesPolicy = policy;
     }
 
@@ -99,6 +79,7 @@ _flutter.loader = null;
      * @returns {Promise<void>}
      */
     async loadServiceWorker(settings) {
+      // Asynchronous function to load the Service Worker
       if (settings == null) {
         console.debug("Null serviceWorker configuration. Skipping.");
         return Promise.resolve();
@@ -143,6 +124,7 @@ _flutter.loader = null;
     async #_getNewServiceWorker(
       serviceWorkerRegistrationPromise
     ) {
+      // Function to get the new Service Worker
       const reg = await serviceWorkerRegistrationPromise;
 
       if (
@@ -161,4 +143,26 @@ _flutter.loader = null;
         console.debug(
           "Updating service worker."
         );
-        return
+        // Functionality to update the Service Worker is incomplete
+        return;
+      }
+    }
+
+    /**
+     * @param {ServiceWorker} newServiceWorker
+     * @returns {Promise<void>}
+     */
+    async #_waitForServiceWorkerActivation(newServiceWorker) {
+      // Function to wait for the new Service Worker to activate
+      return new Promise((resolve) => {
+        newServiceWorker.addEventListener("statechange", () => {
+          if (newServiceWorker.state === "activated") {
+            resolve();
+          }
+        });
+      });
+    }
+  }
+
+})();
+
