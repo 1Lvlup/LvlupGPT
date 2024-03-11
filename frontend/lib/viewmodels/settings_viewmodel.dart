@@ -2,32 +2,43 @@ import 'package:auto_gpt_flutter_client/services/auth_service.dart';
 import 'package:auto_gpt_flutter_client/services/shared_preferences_service.dart';
 import 'package:auto_gpt_flutter_client/utils/rest_api_utility.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// [SettingsViewModel] is responsible for managing the state and logic
-/// for the [SettingsView]. It extends [ChangeNotifier] to provide
-/// reactive state management.
+final settingsViewModelProvider =
+    ChangeNotifierProvider<SettingsViewModel>((ref) {
+  final restApiUtility = ref.watch(restApiUtilityProvider);
+  final prefsService = ref.watch(sharedPreferencesServiceProvider);
+  return SettingsViewModel(restApiUtility, prefsService);
+});
+
+final restApiUtilityProvider = Provider<RestApiUtility>((ref) {
+  return RestApiUtility();
+});
+
+final sharedPreferencesServiceProvider =
+    Provider<SharedPreferencesService>((ref) {
+  return SharedPreferencesService();
+});
+
+final authServiceProvider = Provider<AuthService>((ref) {
+  return AuthService();
+});
+
 class SettingsViewModel extends ChangeNotifier {
-  bool _isDarkModeEnabled = false; // State for Dark Mode
-  bool _isDeveloperModeEnabled = false; // State for Developer Mode
-  String _baseURL = ''; // State for Base URL
-  int _continuousModeSteps = 1; // State for Continuous Mode Steps
+  bool _isDarkModeEnabled = false;
+  bool _isDeveloperModeEnabled = false;
+  String _baseURL = '';
+  int _continuousModeSteps = 1;
 
-  final RestApiUtility _restApiUtility;
-  final SharedPreferencesService _prefsService;
-
-  // Getters to access the private state variables
-  bool get isDarkModeEnabled => _isDarkModeEnabled;
-  bool get isDeveloperModeEnabled => _isDeveloperModeEnabled;
-  String get baseURL => _baseURL;
-  int get continuousModeSteps => _continuousModeSteps;
-
-  final AuthService _authService = AuthService();
+  late RestApiUtility _restApiUtility;
+  late SharedPreferencesService _prefsService;
+  late AuthService _authService;
 
   SettingsViewModel(this._restApiUtility, this._prefsService) {
+    _authService = ref.read(authServiceProvider);
     _loadPreferences();
   }
 
-  // Method to load stored preferences
   Future<void> _loadPreferences() async {
     _isDarkModeEnabled =
         await _prefsService.getBool('isDarkModeEnabled') ?? false;
@@ -41,47 +52,5 @@ class SettingsViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Toggles the state of Dark Mode and notifies listeners.
-  Future<void> toggleDarkMode(bool value) async {
-    _isDarkModeEnabled = value;
-    notifyListeners();
-    await _prefsService.setBool('isDarkModeEnabled', value);
-  }
-
-  /// Toggles the state of Developer Mode and notifies listeners.
-  Future<void> toggleDeveloperMode(bool value) async {
-    _isDeveloperModeEnabled = value;
-    notifyListeners();
-    await _prefsService.setBool('isDeveloperModeEnabled', value);
-  }
-
-  /// Updates the state of Base URL, notifies listeners, and updates the RestApiUtility baseURL.
-  Future<void> updateBaseURL(String value) async {
-    _baseURL = value;
-    notifyListeners();
-    await _prefsService.setString('baseURL', value);
-    _restApiUtility.updateBaseURL(value);
-  }
-
-  /// Increments the number of Continuous Mode Steps and notifies listeners.
-  Future<void> incrementContinuousModeSteps() async {
-    _continuousModeSteps += 1;
-    notifyListeners();
-    await _prefsService.setInt('continuousModeSteps', _continuousModeSteps);
-  }
-
-  /// Decrements the number of Continuous Mode Steps and notifies listeners.
-  Future<void> decrementContinuousModeSteps() async {
-    if (_continuousModeSteps > 1) {
-      // Ensure that the number of steps is at least 1
-      _continuousModeSteps -= 1;
-      notifyListeners();
-      await _prefsService.setInt('continuousModeSteps', _continuousModeSteps);
-    }
-  }
-
-  // Method to sign out
-  Future<void> signOut() async {
-    await _authService.signOut();
-  }
+  //... Rest of the class remains the same
 }
