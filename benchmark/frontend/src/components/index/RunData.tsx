@@ -3,7 +3,9 @@ import { LatestRun } from "../../lib/types";
 import tw from "tailwind-styled-components";
 
 type RecursiveDropdownProps = {
+  // The data to be rendered in the recursive dropdown
   data: any;
+  // An array of keys to skip rendering
   skipKeys: string[];
 };
 
@@ -11,9 +13,10 @@ const isObject = (value: any): value is object =>
   value !== null && typeof value === "object";
 
 const RecursiveDropdown: React.FC<RecursiveDropdownProps> = ({
-  data,
+  data, // eslint-disable-line react/prop-types
   skipKeys,
 }) => {
+  // Return null if data is null or not an object
   if (data === null || typeof data !== "object") {
     return null;
   }
@@ -21,14 +24,17 @@ const RecursiveDropdown: React.FC<RecursiveDropdownProps> = ({
   return (
     <>
       {Object.entries(data).map(([key, value]) => {
+        // Skip rendering keys specified in skipKeys array
         if (skipKeys.includes(key)) {
           return null;
         }
 
+        // Return null if array is empty
         if (Array.isArray(value) && value.length === 0) {
           return null;
         }
 
+        // Render a dropdown for objects
         if (isObject(value)) {
           return (
             <Dropdown key={key}>
@@ -43,6 +49,7 @@ const RecursiveDropdown: React.FC<RecursiveDropdownProps> = ({
           );
         }
 
+        // Render a section for non-object values
         return (
           <Section key={key}>
             <Label>{key}:</Label>
@@ -61,6 +68,7 @@ type RunDataProps = {
 };
 
 const RunData: React.FC<RunDataProps> = ({ latestRun }) => {
+  // Convert benchmark_start_time to a Date object
   const date = new Date(latestRun.benchmark_start_time);
 
   return (
@@ -84,6 +92,7 @@ const RunData: React.FC<RunDataProps> = ({ latestRun }) => {
         </Data>
       </Section>
 
+      {/* Render a dropdown for each test in latestRun.tests */}
       {Object.keys(latestRun.tests).map((testKey) => (
         <Dropdown key={testKey}>
           <DropdownSummary aria-label={`Expand ${testKey}`}>
@@ -104,6 +113,7 @@ const RunData: React.FC<RunDataProps> = ({ latestRun }) => {
   );
 };
 
+// Define styled components for the card and its sections
 const Card = tw.div`
   bg-white
   p-4
@@ -125,6 +135,7 @@ const Data = tw.span`
   ml-1
 `;
 
+// Define styled components for the dropdown and its parts
 const Dropdown = tw.details`
   mt-4
 `;
@@ -146,4 +157,8 @@ const DropdownArrow = () => (
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth={2}
-     
+      d="M19 9l-7 7-7-7"
+    />
+  </svg>
+);
+
