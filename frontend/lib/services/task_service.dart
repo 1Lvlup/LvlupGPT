@@ -6,21 +6,19 @@ import 'package:auto_gpt_flutter_client/utils/rest_api_utility.dart';
 
 /// Service class for performing task-related operations.
 class TaskService {
-  final RestApiUtility api;
-  final SharedPreferencesService prefsService;
+  final RestApiUtility _api;
+  final SharedPreferencesService _prefsService;
   List<String> _deletedTaskIds = [];
 
-  TaskService(this.api, this.prefsService);
+  TaskService(this._api, this._prefsService);
 
   /// Creates a new task.
   ///
   /// [taskRequestBody] is a Map representing the request body for creating a task.
-  Future<Map<String, dynamic>> createTask(
-      TaskRequestBody taskRequestBody) async {
+  Future<Map<String, dynamic>> createTask(TaskRequestBody taskRequestBody) async {
     try {
-      return await api.post('agent/tasks', taskRequestBody.toJson());
+      return await _api.post('agent/tasks', taskRequestBody.toJson());
     } catch (e) {
-      // TODO: We are bubbling up the full response. Revisit this.
       rethrow;
     }
   }
@@ -28,11 +26,14 @@ class TaskService {
   /// Fetches a single page of tasks.
   ///
   /// [currentPage] and [pageSize] are pagination parameters.
-  Future<TaskResponse> fetchTasksPage(
-      {int currentPage = 1, int pageSize = 10}) async {
+  Future<TaskResponse> fetchTasksPage({
+    required int currentPage,
+    required int pageSize,
+  }) async {
     try {
-      final response = await api
-          .get('agent/tasks?current_page=$currentPage&page_size=$pageSize');
+      final response = await _api.get(
+        'agent/tasks?current_page=$currentPage&page_size=$pageSize',
+      );
       return TaskResponse.fromJson(response);
     } catch (e) {
       throw Exception('Failed to fetch a page of tasks: $e');
@@ -40,18 +41,18 @@ class TaskService {
   }
 
   /// Fetches all tasks across all pages.
-  // TODO: Temporaily make page size 10000 until pagination is fixed
   Future<List<Task>> fetchAllTasks({int pageSize = 10000}) async {
     int currentPage = 1;
     List<Task> allTasks = [];
 
     while (true) {
-      final response =
-          await fetchTasksPage(currentPage: currentPage, pageSize: pageSize);
+      final response = await fetchTasksPage(
+        currentPage: currentPage,
+        pageSize: pageSize,
+      );
       allTasks.addAll(response.tasks);
 
       if (response.tasks.length < pageSize) {
-        // No more tasks to fetch
         break;
       }
       currentPage++;
@@ -64,7 +65,7 @@ class TaskService {
   /// [taskId] is the ID of the task.
   Future<Map<String, dynamic>> getTaskDetails(String taskId) async {
     try {
-      return await api.get('agent/tasks/$taskId');
+      return await _api.get('agent/tasks/$taskId');
     } catch (e) {
       throw Exception('Failed to get task details: $e');
     }
@@ -74,24 +75,28 @@ class TaskService {
   ///
   /// [taskId] is the ID of the task.
   /// [currentPage] and [pageSize] are optional pagination parameters.
-  Future<Map<String, dynamic>> listTaskArtifacts(String taskId,
-      {int currentPage = 1, int pageSize = 10}) async {
+  Future<Map<String, dynamic>> listTaskArtifacts(
+    String taskId, {
+    int currentPage = 1,
+    int pageSize = 10,
+  }) async {
     try {
-      return await api.get(
-          'agent/tasks/$taskId/artifacts?current_page=$currentPage&page_size=$pageSize');
+      return await _api.get(
+        'agent/tasks/$taskId/artifacts?current_page=$currentPage&page_size=$pageSize',
+      );
     } catch (e) {
       throw Exception('Failed to list task artifacts: $e');
     }
   }
 
   Future<void> loadDeletedTasks() async {
-    _deletedTaskIds = await prefsService.getStringList('deletedTasks') ?? [];
+    _deletedTaskIds = _prefsService.getStringList('deletedTasks') ?? [];
     print("Deleted tasks fetched successfully!");
   }
 
   void saveDeletedTask(String taskId) {
     _deletedTaskIds.add(taskId);
-    prefsService.setStringList('deletedTasks', _deletedTaskIds);
+    _prefsService.setStringList('deletedTasks', _deletedTaskIds);
     print("Task $taskId deleted successfully!");
   }
 
