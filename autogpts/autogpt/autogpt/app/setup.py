@@ -6,19 +6,43 @@ from autogpt.app.utils import clean_input
 from autogpt.config import AIDirectives, AIProfile, Config
 from autogpt.logs.helpers import print_attribute
 
+# Initialize the logger for this module
 logger = logging.getLogger(__name__)
 
 
 def apply_overrides_to_ai_settings(
-    ai_profile: AIProfile,
-    directives: AIDirectives,
-    override_name: Optional[str] = "",
-    override_role: Optional[str] = "",
-    replace_directives: bool = False,
-    resources: Optional[list[str]] = None,
-    constraints: Optional[list[str]] = None,
-    best_practices: Optional[list[str]] = None,
+    ai_profile: AIProfile,  # The AI profile to apply overrides to
+    directives: AIDirectives,  # The AI directives to apply overrides to
+    override_name: Optional[str] = "",  # Optional override for AI name
+    override_role: Optional[str] = "",  # Optional override for AI role
+    replace_directives: bool = False,  # Replace existing directives or add to them
+    resources: Optional[list[str]] = None,  # Optional list of resource overrides
+    constraints: Optional[list[str]] = None,  # Optional list of constraint overrides
+    best_practices: Optional[list[str]] = None,  # Optional list of best practice overrides
 ):
+    """
+    Apply overrides to AI settings.
+
+    This function allows you to override various attributes of the AI profile and
+    directives. You can override the AI name and role, as well as add, remove, or
+    replace resources, constraints, and best practices.
+
+    Args:
+        ai_profile (AIProfile): The AI profile to apply overrides to.
+        directives (AIDirectives): The AI directives to apply overrides to.
+        override_name (Optional[str], optional): Optional override for AI name.
+            Defaults to "".
+        override_role (Optional[str], optional): Optional override for AI role.
+            Defaults to "".
+        replace_directives (bool, optional): Replace existing directives or add to them.
+            Defaults to False.
+        resources (Optional[list[str]], optional): Optional list of resource overrides.
+            Defaults to None.
+        constraints (Optional[list[str]], optional): Optional list of constraint overrides.
+            Defaults to None.
+        best_practices (Optional[list[str]], optional): Optional list of best practice overrides.
+            Defaults to None.
+    """
     if override_name:
         ai_profile.ai_name = override_name
     if override_role:
@@ -45,15 +69,20 @@ async def interactively_revise_ai_settings(
     directives: AIDirectives,
     app_config: Config,
 ):
-    """Interactively revise the AI settings.
+    """
+    Interactively revise the AI settings.
+
+    This function allows you to revise the AI profile and directives through an
+    interactive prompt. You can change the AI name and role, add, remove, or
+    modify constraints, resources, and best practices.
 
     Args:
-        ai_profile (AIConfig): The current AI profile.
+        ai_profile (AIProfile): The current AI profile.
         ai_directives (AIDirectives): The current AI directives.
         app_config (Config): The application configuration.
 
     Returns:
-        AIConfig: The revised AI settings.
+        AIProfile: The revised AI settings.
     """
     logger = logging.getLogger("revise_ai_profile")
 
@@ -68,13 +97,14 @@ async def interactively_revise_ai_settings(
             logger=logger,
         )
 
+        # Ask the user if they want to continue with the current settings
         if (
             await clean_input(app_config, "Continue with these settings? [Y/n]")
             or app_config.authorise_key
         ) == app_config.authorise_key:
             break
 
-        # Ask for revised ai_profile
+        # Revise the AI profile
         ai_profile.ai_name = (
             await clean_input(
                 app_config, "Enter AI name (or press enter to keep current):"
@@ -128,82 +158,4 @@ async def interactively_revise_ai_settings(
             new_resource = (
                 await clean_input(
                     app_config,
-                    f"Enter new resource {i+1}"
-                    " (press enter to keep current, or '-' to remove):",
-                )
-                or resource
-            )
-            if new_resource == "-":
-                directives.resources.remove(resource)
-                continue
-            elif new_resource:
-                directives.resources[i] = new_resource
-
-            i += 1
-
-        # Add new resources
-        while True:
-            new_resource = await clean_input(
-                app_config,
-                "Press enter to finish, or enter a resource to add:",
-            )
-            if not new_resource:
-                break
-            directives.resources.append(new_resource)
-
-        # Revise best practices
-        i = 0
-        while i < len(directives.best_practices):
-            best_practice = directives.best_practices[i]
-            print_attribute(f"Best Practice {i+1}:", f'"{best_practice}"')
-            new_best_practice = (
-                await clean_input(
-                    app_config,
-                    f"Enter new best practice {i+1}"
-                    " (press enter to keep current, or '-' to remove):",
-                )
-                or best_practice
-            )
-            if new_best_practice == "-":
-                directives.best_practices.remove(best_practice)
-                continue
-            elif new_best_practice:
-                directives.best_practices[i] = new_best_practice
-
-            i += 1
-
-        # Add new best practices
-        while True:
-            new_best_practice = await clean_input(
-                app_config,
-                "Press enter to finish, or add a best practice to add:",
-            )
-            if not new_best_practice:
-                break
-            directives.best_practices.append(new_best_practice)
-
-        revised = True
-
-    return ai_profile, directives
-
-
-def print_ai_settings(
-    ai_profile: AIProfile,
-    directives: AIDirectives,
-    logger: logging.Logger,
-    title: str = "AI Settings",
-):
-    print_attribute(title, "")
-    print_attribute("-" * len(title), "")
-    print_attribute("Name :", ai_profile.ai_name)
-    print_attribute("Role :", ai_profile.ai_role)
-
-    print_attribute("Constraints:", "" if directives.constraints else "(none)")
-    for constraint in directives.constraints:
-        logger.info(f"- {constraint}")
-    print_attribute("Resources:", "" if directives.resources else "(none)")
-    for resource in directives.resources:
-        logger.info(f"- {resource}")
-    print_attribute("Best practices:", "" if directives.best_practices else "(none)")
-    for best_practice in directives.best_practices:
-        logger.info(f"- {best_practice}")
+                    f"
