@@ -17,9 +17,10 @@ class TestSuite {
 // Deserialization: Create an object from a Map
   factory TestSuite.fromJson(Map<String, dynamic> json) {
     return TestSuite(
-      timestamp: json['timestamp'],
-      tests: List<Task>.from(json['tests'].map(
-          (taskJson) => Task.fromMap(Map<String, dynamic>.from(taskJson)))),
+      timestamp: json['timestamp'] as String,
+      tests: (json['tests'] as List<dynamic>)
+          .map((taskJson) => Task.fromMap(taskJson as Map<String, dynamic>))
+          .toList(),
     );
   }
 }
