@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Workspace
-   version = "1.0">
+   version = "1.0"
+   xmlns="http://example.com/workspace">
    <FileRef
-      location = "self:">
-   </FileRef>
+      location = "http://example.com/file.txt"
+      name="file.txt" />
 </Workspace>
+
