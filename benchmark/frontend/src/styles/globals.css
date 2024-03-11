@@ -1,3 +1,8 @@
+/* This is the base style file for Tailwind CSS. It includes any global styles or customizations that should be applied to all elements in the application. */
 @tailwind base;
+
+/* This is the component style file for Tailwind CSS. It includes any styles or customizations that should be applied to specific components in the application. */
 @tailwind components;
+
+/* This is the utility style file for Tailwind CSS. It includes all of the utility classes that can be used to style elements in the application. */
 @tailwind utilities;
