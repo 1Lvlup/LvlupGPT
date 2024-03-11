@@ -1,6 +1,5 @@
-# Exclude VCR cassettes from stats
+# The following line tells Linguist (a tool used by GitHub to detect and classify programming languages in a repository) to exclude all .yml files in the /tests/vcr_cassettes/ directory from being counted in the repository's language statistics.
 **/tests/vcr_cassettes/**/*.yml linguist-generated exclude=true
 
-# Mark documentation as such
+# The second line tells Linguist to mark all .md files in the /docs/ directory as documentation. This helps distinguish between code files and documentation files in the repository.
 **/docs/**/*.md linguist-documentation
-
