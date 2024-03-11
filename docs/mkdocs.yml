@@ -1,56 +1,48 @@
+# The name and URL of the website.
 site_name: AutoGPT Documentation
 site_url: https://docs.agpt.co/
+
+# The URL of the repository where the source code of the project is hosted.
 repo_url: https://github.com/Significant-Gravitas/AutoGPT
+
+# The directory where the documentation files are located.
 docs_dir: content
+
+# The navigation structure of the website, including sections and pages.
 nav:
-  - Home: index.md
-
+  # A section for the AutoGPT Agent.
   - AutoGPT Agent:
-    - Introduction: AutoGPT/index.md
-    - Setup:
+      # The introduction page for the AutoGPT Agent.
+      Introduction: AutoGPT/index.md
+      # A subsection for setup instructions.
+      Setup:
+        # The main setup page for AutoGPT.
         - Setting up AutoGPT: AutoGPT/setup/index.md
+        # A page for setting up AutoGPT with Docker.
         - Set up with Docker: AutoGPT/setup/docker.md
-    - Usage: AutoGPT/usage.md
-    - Plugins: AutoGPT/plugins.md
-    # - Configuration:
-    #     - Options: AutoGPT/configuration/options.md
-    #     - Search: AutoGPT/configuration/search.md
-    #     - Memory: AutoGPT/configuration/memory.md
-    #     - Voice: AutoGPT/configuration/voice.md
-    #     - Image Generation: AutoGPT/configuration/imagegen.md
-    - Help us improve AutoGPT:
-        - Share your debug logs with us: AutoGPT/share-your-logs.md
-        - Contribution guide: contributing.md
-        - Running tests: AutoGPT/testing.md
-        - Code of Conduct: code-of-conduct.md
+      # A page for usage instructions.
+      Usage: AutoGPT/usage.md
+      # A page for plugins.
+      Plugins: AutoGPT/plugins.md
+      # A subsection for configuration options.
+      # Configuration:
+      #   - Options: AutoGPT/configuration/options.md
+      #   - Search: AutoGPT/configuration/search.md
+      #   - Memory: AutoGPT/configuration/memory.md
+      #   - Voice: AutoGPT/configuration/voice.md
+      #   - Image Generation: AutoGPT/configuration/imagegen.md
+      # A subsection for contributing to the project.
+      - Help us improve AutoGPT:
+          # A page for sharing debug logs.
+          - Share your debug logs with us: AutoGPT/share-your-logs.md
+          # A page for the contribution guide.
+          - Contribution guide: contributing.md
+          # A page for running tests.
+          - Running tests: AutoGPT/testing.md
+          # A page for the code of conduct.
+          - Code of Conduct: code-of-conduct.md
 
-  - Benchmark:
-    - Readme: https://github.com/Significant-Gravitas/AutoGPT/blob/master/benchmark/README.md
-
-  - Forge:
-    - Introduction: forge/get-started.md
-
-  - Frontend:
-    - Readme: https://github.com/Significant-Gravitas/AutoGPT/blob/master/frontend/README.md
-
-  # - Challenges:
-  #     - Introduction: challenges/introduction.md
-  #     - List of Challenges:
-  #         - Memory:
-  #             - Introduction: challenges/memory/introduction.md
-  #             - Memory Challenge A: challenges/memory/challenge_a.md
-  #             - Memory Challenge B: challenges/memory/challenge_b.md
-  #             - Memory Challenge C: challenges/memory/challenge_c.md
-  #             - Memory Challenge D: challenges/memory/challenge_d.md
-  #         - Information retrieval:
-  #             - Introduction: challenges/information_retrieval/introduction.md
-  #             - Information Retrieval Challenge A: challenges/information_retrieval/challenge_a.md
-  #             - Information Retrieval Challenge B: challenges/information_retrieval/challenge_b.md
-  # - Submit a Challenge: challenges/submit.md
-  # - Beat a Challenge: challenges/beat.md
-
-  - License: https://github.com/Significant-Gravitas/AutoGPT/blob/master/LICENSE
-
+# The theme and color scheme of the website, as well as various features.
 theme:
   name: material
   custom_dir: overrides
@@ -58,9 +50,13 @@ theme:
     logo: material/book-open-variant
   favicon: favicon.png
   features:
+    # Enable navigation sections.
     - navigation.sections
+    # Enable table of contents following the reader.
     - toc.follow
+    # Enable a navigation bar at the top of the page.
     - navigation.top
+    # Enable copying code from code blocks.
     - content.code.copy
   palette:
     # Palette toggle for light mode
@@ -77,6 +73,7 @@ theme:
         icon: material/weather-sunny
         name: Switch to light mode
 
+# A list of Markdown extensions and plugins used to enhance the functionality of the Markdown parser.
 markdown_extensions:
   # Python Markdown
   - abbr
@@ -119,13 +116,15 @@ markdown_extensions:
       custom_checkbox: true
   - pymdownx.tilde
 
+# A list of additional plugins for the documentation website.
 plugins:
   - table-reader
   - search
 
+# A list of additional JavaScript files to be included in the website.
 extra_javascript:
   - https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js
   - _javascript/tablesort.js
   - _javascript/mathjax.js
   - https://polyfill.io/v3/polyfill.min.js?features=es6
-  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-m
