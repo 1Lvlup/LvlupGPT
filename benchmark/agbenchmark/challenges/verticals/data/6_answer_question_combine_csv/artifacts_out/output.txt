@@ -1,8 +1,16 @@
 # Get user input
+# The 'input' function is used to prompt the user for a number.
+# The 'float' function is used to convert the user input into a floating point number.
 num = float(input("Enter a number: "))
 
 # Calculate the square
+# The '**' operator is used to calculate the square of a number.
+# In this case, the square of 'num' is calculated and assigned to the variable 'square'.
 square = num ** 2
 
 # Print the result with proper formatting
+# The 'print' function is used to output the result to the console.
+# The 'f' string notation is used to format the output with the desired number of decimal places.
 print(f"The square of {num:.2f} is {square:.2f}.")
+# Specifically, the number stored in 'num' is formatted to display two decimal places,
+# and the same is done for the number stored in 'square'.
