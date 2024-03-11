@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-	<key>Root</key>
-	<dict>
-		<key>IDEDidComputeMac32BitWarning</key>
-		<true/>
-	</dict>
-</dict>
-</plist>
+<?xml version="1.0" encoding="UTF-8"?> <!-- XML declaration, specifying version and encoding -->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"> <!-- DOCTYPE declaration, referencing the PLIST DTD -->
+<plist version="1.0"> <!-- Root element, specifying the plist version -->
+<dict> <!-- dict element, representing a dictionary -->
+	<key>Root</key> <!-- key element, specifying the key for the dictionary entry -->
+	<dict> <!-- Another dict element, nested within the Root dict -->
+		<key>IDEDidComputeMac32BitWarning</key> <!-- key element, specifying the key for the dictionary entry -->
+		<true/> <!-- true element, representing a boolean value -->
+	</dict> <!-- Closing dict element for the nested dictionary -->
+</dict> <!-- Closing dict element for the Root dictionary -->
+</plist> <!-- Closing plist element -->
