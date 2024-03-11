@@ -3,69 +3,66 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:auto_gpt_flutter_client/views/chat/chat_input_field.dart';
 
 void main() {
-  // Test if the ChatInputField widget renders correctly
-  testWidgets('ChatInputField renders correctly', (WidgetTester tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
+  group('ChatInputField tests:', () {
+    Widget buildTestableWidget({required Widget child}) {
+      return MaterialApp(
         home: Scaffold(
-          body: ChatInputField(
+          body: child,
+        ),
+      );
+    }
+
+    testWidgets('renders correctly', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        buildTestableWidget(
+          child: ChatInputField(
             onSendPressed: () {},
           ),
         ),
-      ),
-    );
+      );
 
-    // Find the TextField widget
-    expect(find.byType(TextField), findsOneWidget);
-    // Find the send IconButton
-    expect(find.byIcon(Icons.send), findsOneWidget);
-  });
+      expect(find.byType(TextField), findsOneWidget);
+      expect(find.byIcon(Icons.send), findsOneWidget);
+    });
 
-  // Test if the TextField inside ChatInputField can accept and display input
-  testWidgets('ChatInputField text field accepts input',
-      (WidgetTester tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: ChatInputField(
+    testWidgets('text field accepts input', (WidgetTester tester) async {
+      String enteredText = '';
+
+      await tester.pumpWidget(
+        buildTestableWidget(
+          child: ChatInputField(
             onSendPressed: () {},
+            onTextChanged: (text) {
+              enteredText = text;
+            },
           ),
         ),
-      ),
-    );
+      );
 
-    // Type 'Hello' into the TextField
-    await tester.enterText(find.byType(TextField), 'Hello');
-    // Rebuild the widget with the new text
-    await tester.pump();
+      await tester.enterText(find.byType(TextField), 'Hello');
+      await tester.pump();
 
-    // Expect to find 'Hello' in the TextField
-    expect(find.text('Hello'), findsOneWidget);
-  });
+      expect(enteredText, 'Hello');
+      expect(find.text('Hello'), findsNothing); // TextField should not display input
+    });
 
-  // Test if the send button triggers the provided onSendPressed callback
-  testWidgets('ChatInputField send button triggers callback',
-      (WidgetTester tester) async {
-    bool onPressedCalled = false;
+    testWidgets('send button triggers callback', (WidgetTester tester) async {
+      bool onPressedCalled = false;
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: ChatInputField(
+      await tester.pumpWidget(
+        buildTestableWidget(
+          child: ChatInputField(
             onSendPressed: () {
               onPressedCalled = true;
             },
           ),
         ),
-      ),
-    );
+      );
 
-    // Tap the send IconButton
-    await tester.tap(find.byIcon(Icons.send));
-    // Rebuild the widget after the tap
-    await tester.pump();
+      await tester.tap(find.byIcon(Icons.send));
+      await tester.pump();
 
-    // Check if the callback was called
-    expect(onPressedCalled, isTrue);
+      expect(onPressedCalled, isTrue);
+    });
   });
 }
