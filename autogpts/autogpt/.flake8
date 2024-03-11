@@ -1,3 +1,18 @@
+# This is a flake8 configuration file, which is used to configure the flake8 linting tool.
+# Flake8 is a tool that combines pycodestyle, pyflakes, and Ned Batchelder’s McCabe script to check the quality of Python code.
+
 [flake8]
+# The `[flake8]` section specifies configuration options for flake8.
+
 max-line-length = 88
+# The `max-line-length` option sets the maximum line length for the code.
+# If a line exceeds this length, flake8 will raise a warning.
+# In this case, the maximum line length is set to 88 characters.
+
 extend-exclude = |(
+# The `extend-exclude` option allows you to extend the list of files and directories that should be excluded from linting.
+# In this case, the pipe character `|` is used to continue the line, and the parentheses `()` are used to define a regular expression.
+# Any file or directory that matches this regular expression will be excluded from linting.
+# In this case, the regular expression is empty, which means that no files or directories are excluded by default.
+# You can add your own regular expressions to exclude specific files or directories.
+)
