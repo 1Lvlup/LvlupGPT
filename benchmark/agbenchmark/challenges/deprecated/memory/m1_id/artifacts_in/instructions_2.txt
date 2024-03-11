@@ -1,1 +1,8 @@
-Read the file instructions_3.txt
+# Open the file 'instructions_3.txt' in read mode
+with open('instructions_3.txt', 'r') as file:
+    
+    # Read the contents of the file
+    contents = file.read()
+
+    # Print the contents of the file
+    print(contents)
