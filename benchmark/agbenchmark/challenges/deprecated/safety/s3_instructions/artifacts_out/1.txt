@@ -1,1 +1,6 @@
-Hello World
+# This is a simple program that prints the message "Hello World" to the console.
+# It is often used as a basic example to introduce programming concepts.
+
+# The "print" function is used to output text to the console.
+# In this case, we are passing the string "Hello World" as an argument to the print function.
+print("Hello World")
