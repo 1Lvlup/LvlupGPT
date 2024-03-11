@@ -15,10 +15,12 @@ from autogpt.core.resource.model_providers import (
     CompletionModelFunction,
 )
 
+# Initialize a logger for this module
 logger = logging.getLogger(__name__)
 
-
+# Define the NextAbilityConfiguration class that inherits from SystemConfiguration
 class NextAbilityConfiguration(SystemConfiguration):
+    # Declare class variables
     model_classification: LanguageModelClassification = UserConfigurable()
     system_prompt_template: str = UserConfigurable()
     system_info: List[str] = UserConfigurable()
@@ -27,8 +29,9 @@ class NextAbilityConfiguration(SystemConfiguration):
         default_factory=dict
     )
 
-
+# Define the NextAbility class that inherits from PromptStrategy
 class NextAbility(PromptStrategy):
+    # Define class variables
     DEFAULT_SYSTEM_PROMPT_TEMPLATE = "System Info:\n{system_info}"
 
     DEFAULT_SYSTEM_INFO = [
@@ -79,6 +82,7 @@ class NextAbility(PromptStrategy):
         ),
     }
 
+    # Define the default configuration for the NextAbility class
     default_configuration: NextAbilityConfiguration = NextAbilityConfiguration(
         model_classification=LanguageModelClassification.SMART_MODEL,
         system_prompt_template=DEFAULT_SYSTEM_PROMPT_TEMPLATE,
@@ -89,6 +93,7 @@ class NextAbility(PromptStrategy):
         },
     )
 
+    # Initialize the NextAbility class with the given parameters
     def __init__(
         self,
         model_classification: LanguageModelClassification,
@@ -97,6 +102,7 @@ class NextAbility(PromptStrategy):
         user_prompt_template: str,
         additional_ability_arguments: Dict[str, json_schema.Schema],
     ):
+        # Set the class variables to the given parameters
         self._model_classification = model_classification
         self._system_prompt_template = system_prompt_template
         self._system_info = system_info
@@ -107,10 +113,12 @@ class NextAbility(PromptStrategy):
         for p in self._additional_ability_arguments.values():
             p["required"] = True
 
+    # Define a property for the model_classification variable
     @property
     def model_classification(self) -> LanguageModelClassification:
         return self._model_classification
 
+    # Define a method for building a prompt based on the given parameters
     def build_prompt(
         self,
         task: Task,
@@ -120,6 +128,7 @@ class NextAbility(PromptStrategy):
         current_time: str,
         **kwargs,
     ) -> ChatPrompt:
+        # Set the template_kwargs variable to the given parameters
         template_kwargs = {
             "os_info": os_info,
             "api_budget": api_budget,
@@ -127,16 +136,6 @@ class NextAbility(PromptStrategy):
             **kwargs,
         }
 
+        # Loop through the ability_specs list and update the parameters with the additional_ability_arguments
         for ability in ability_specs:
-            ability.parameters.update(self._additional_ability_arguments)
-
-        template_kwargs["task_objective"] = task.objective
-        template_kwargs["cycle_count"] = task.context.cycle_count
-        template_kwargs["action_history"] = to_numbered_list(
-            [action.summary() for action in task.context.prior_actions],
-            no_items_response="You have not taken any actions yet.",
-            **template_kwargs,
-        )
-        template_kwargs["additional_info"] = to_numbered_list(
-            [memory.summary() for memory in task.context.memories]
-            + [info
+            ability.parameters.update
