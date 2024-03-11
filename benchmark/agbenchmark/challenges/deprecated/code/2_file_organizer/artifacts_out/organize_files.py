@@ -2,8 +2,12 @@ import argparse
 import os
 import shutil
 
-
 def organize_files(directory_path):
+    """
+    This function organizes files in a given directory based on their file types.
+    
+    :param directory_path: The path of the directory to be organized
+    """
     # Define file type groups
     file_types = {
         "images": [".png", ".jpg", ".jpeg"],
@@ -33,6 +37,9 @@ def organize_files(directory_path):
 
 
 if __name__ == "__main__":
+    """
+    Main function which sets up the command line argument parser and calls the organize_files function.
+    """
     parser = argparse.ArgumentParser(
         description="Organize files in a directory based on their file types"
     )
