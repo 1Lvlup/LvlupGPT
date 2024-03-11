@@ -3,28 +3,19 @@ class Task {
   final String id;
   final Map<String, dynamic>? additionalInput;
   final List<String>? artifacts;
+  String? _title;
 
-  String _title;
+  String? get title => _title;
 
-  Task({
-    required this.id,
-    this.additionalInput,
-    this.artifacts,
-    required String title,
-  })  : assert(title.isNotEmpty, 'Title cannot be empty'),
-        _title = title;
-
-  String get title => _title;
-
-  set title(String newTitle) {
-    if (newTitle.isNotEmpty) {
+  set title(String? newTitle) {
+    if (newTitle?.isNotEmpty ?? false) {
       _title = newTitle;
     } else {
       throw ArgumentError('Title cannot be empty.');
     }
   }
 
-// Convert a Map (usually from JSON) to a Task object
+  /// Converts a Map (usually from JSON) to a Task object
   factory Task.fromMap(Map<String, dynamic> map) {
     Map<String, dynamic>? additionalInput;
     List<String>? artifacts;
@@ -34,21 +25,24 @@ class Task {
     }
 
     if (map['artifacts'] != null) {
-      artifacts = List<String>.from(map['artifacts'].map((e) => e.toString()));
+      artifacts = List<String>.from(map['artifacts'].cast<String>());
     }
 
-    return Task(
+    final Task task = Task(
       id: map['task_id'],
       additionalInput: additionalInput,
       artifacts: artifacts,
-      title: map['input'],
     );
+
+    task._title = map['input'];
+
+    return task;
   }
 
   Map<String, dynamic> toJson() {
     return {
       'task_id': id,
-      'input': title,
+      'input': _title,
       'additional_input': additionalInput,
       'artifacts': artifacts,
     };
@@ -57,11 +51,13 @@ class Task {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is Task && runtimeType == other.runtimeType && id == other.id;
+      other is Task &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          _title == other._title &&
+          mapEquals(additionalInput, other.additionalInput) &&
+          listEquals(artifacts, other.artifacts);
 
   @override
-  int get hashCode => id.hashCode ^ title.hashCode;
-
-  @override
-  String toString() => 'Task(id: $id, title: $title)';
-}
+  int get hashCode =>
+      id.hashCode ^ _title.hashCode ^ hashObjects(additionalInput)
