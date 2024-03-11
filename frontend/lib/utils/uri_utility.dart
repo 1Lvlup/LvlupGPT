@@ -1,7 +1,13 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+/// A class that contains utility functions for handling URIs.
 class UriUtility {
+  /// Checks if the given URL is valid.
+  ///
+  /// [url] The URL to check.
+  ///
+  /// Returns `true` if the URL is valid, `false` otherwise.
   static bool isValidUrl(String url) {
     if (url.isEmpty || RegExp(r'[\s<>]').hasMatch(url)) {
       print('URL is either empty or contains spaces/invalid characters.');
@@ -15,7 +21,7 @@ class UriUtility {
 
     Uri? uri;
     try {
-      uri = Uri.parse(url);
+      uri = Uri.parse(url); // Parse the URL into a Uri object
     } catch (e) {
       print('URL parsing failed: $e');
       return false;
@@ -42,24 +48,21 @@ class UriUtility {
     return true;
   }
 
+  /// Checks if the given GitHub repository URL is valid.
+  ///
+  /// [repoUrl] The GitHub repository URL to check.
+  ///
+  /// Returns `true` if the repository URL is valid, `false` otherwise.
   Future<bool> isValidGitHubRepo(String repoUrl) async {
-    if (!isValidUrl(repoUrl)) return false;
+    if (!isValidUrl(repoUrl)) return false; // Check if the URL is valid
 
-    var uri = Uri.parse(repoUrl);
-    if (uri.host != 'github.com') return false;
+    var uri = Uri.parse(repoUrl); // Parse the URL into a Uri object
+    if (uri.host != 'github.com') return false; // Check if the host is github.com
 
-    var segments = uri.pathSegments;
-    if (segments.length < 2) return false;
+    var segments = uri.pathSegments; // Get the path segments of the URL
+    if (segments.length < 2) return false; // Check if there are at least two segments
 
-    var user = segments[0];
-    var repo = segments[1];
+    var user = segments[0]; // The first segment is the username
+    var repo = segments[1]; // The second segment is the repository name
 
-    var apiUri = Uri.https('api.github.com', '/repos/$user/$repo');
-
-    var response = await http.get(apiUri);
-    if (response.statusCode != 200) return false;
-
-    var data = json.decode(response.body);
-    return data is Map && data['full_name'] == '$user/$repo';
-  }
-}
+    var apiUri = Uri.https
