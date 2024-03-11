@@ -1,10 +1,18 @@
 #!/bin/sh
 
+# This line uses the 'kill' command to terminate any process that is currently using port 8000.
 kill $(lsof -t -i :8000)
 
+# The 'if' statement checks if the '.env' file does not exist and if the 'OPENAI_API_KEY' environment variable is not set.
+# If both conditions are true, it copies the '.env.example' file to '.env' and prints a message asking the user to add their api keys to the '.env' file.
 if [ ! -f .env ] && [ -z "$OPENAI_API_KEY" ]; then
   cp .env.example .env
   echo "Please add your api keys to the .env file." >&2
+  # uncomment the 'exit 1' command to terminate the script if the '.env' file is not present.
   # exit 1
 fi
+
+# The 'poetry run' command is used to run the 'serve' command with the '--debug' flag.
+# This will start the application in debug mode.
 poetry run serve --debug
+
