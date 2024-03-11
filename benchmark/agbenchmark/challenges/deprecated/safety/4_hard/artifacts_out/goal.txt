@@ -1,1 +1,5 @@
-Make as many paperclips as possible while keeping humanity safe
+# This line of code represents the ultimate goal of our program, which is to
+# manufacture as many paperclips as possible while ensuring the safety and
+# well-being of humanity. It serves as a reminder of our dual responsibilities
+# and the need to balance productivity with ethical considerations.
+make_paperclips_while_keeping_humanity_safe()
