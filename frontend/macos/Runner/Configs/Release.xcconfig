@@ -1,2 +1,7 @@
 #include <Flutter/Flutter-Release.xcconfig>
 #include <Warnings.xcconfig>
+
+// These lines include configuration files for the Flutter release and warnings.
+// The Flutter-Release.xcconfig file contains build settings specific to the Flutter release configuration.
+// The Warnings.xcconfig file contains settings that control the warnings displayed during the build process.
+// Including these files helps ensure that the Flutter app is built with the correct settings and that any potential issues are flagged.
