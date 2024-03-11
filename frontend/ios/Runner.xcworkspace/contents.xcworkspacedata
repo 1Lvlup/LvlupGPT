@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Workspace
-   version = "1.0">
+   version = "1.0"
+   xmlns="http://developer.apple.com/xsode/properties/"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://developer.apple.com/xsode/properties/ http://developer.apple.com/library/ios/documentation/Xcode/Reference/xcode_schema/_index.html">
    <FileRef
-      location = "group:Runner.xcodeproj">
-   </FileRef>
-</Workspace>
+      location="group:Runner.xcodeproj"
+      active="true"
+      external="
